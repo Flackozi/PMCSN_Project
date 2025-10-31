@@ -23,6 +23,7 @@ def finite_simulation(stop):
 
     while (stats.t.arrival < stop_time) or (len(stats.A_jobs) + len(stats.B_jobs) + stats.number_P > 0):
         execute(stats, stop_time)
+        
 
     stats.calculate_area_queue()
     # horizon = stats.t.current (last time)

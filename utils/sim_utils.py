@@ -28,6 +28,7 @@ def get_simulation(model):
     vs.set_simulation(model, sim)
 
 
+
 def reset_arrival_temp():
     global arrivalTemp
     arrivalTemp = vs.START

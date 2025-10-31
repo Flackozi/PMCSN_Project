@@ -16,6 +16,7 @@ SEED = 123456789
 REPLICATIONS = 96
 
 
+
 def set_simulation(model, type):
     global SIM_TYPE, MODEL 
     if model == 1:

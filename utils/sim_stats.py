@@ -180,3 +180,4 @@ class ReplicationStats:
     #     self.P_delays.append(results['P_avg_delay'])
     #     self.sys_delays.append(results['sys_avg_delay'])
     #     self.seeds.append(results['seed'])
+
