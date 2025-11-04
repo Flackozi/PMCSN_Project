@@ -3,6 +3,8 @@ INFINITE = 0
 FINITE = 1
 SIM_TYPE = FINITE
 
+INFINITY = float('inf')
+
 
 BASE = 1
 MODEL = BASE

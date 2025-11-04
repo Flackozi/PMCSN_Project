@@ -34,20 +34,25 @@ class SimulationStats:
         self.index_B  = 0
         self.index_P  = 0
 
+
         # populations (node-level)
         self.number_A  = 0  # = len(A_jobs)
         self.number_B  = 0  # = len(B_jobs)
-        self.number_P  = 0  # P in service/queued (if queue modeled)
+        #self.number_P  = 0  # P in service/queued (if queue modeled)
 
         # visits split at A (counts for area split and reporting)
         self.number_A1 = 0
         self.number_A2 = 0
         self.number_A3 = 0
 
+        #tempi di servizio rimamenti di A
+        self.remaining_A = []
+        self.remaining_B = []
+
         # PS job lists with remaining service
         # stage is 'A1'|'A2'|'A3' for A; only remaining for B
-        self.A_jobs = []  # [{'stage': 'A1'|'A2'|'A3', 'rem': float}, ...]
-        self.B_jobs = []  # [{'rem': float}, ...]
+        self.A_jobs = {} # [{'stage': 'A1'|'A2'|'A3', 'rem': float}, ...]
+        self.B_jobs = {} # [{'rem': float}, ...]
 
         # we keep a simple scalar for P (delay center)
         # if you want an explicit queue for P, add self.P_jobs list
