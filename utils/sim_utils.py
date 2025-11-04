@@ -49,6 +49,22 @@ def GetArrival():
     arrivalTemp += Exponential(1 / vs.LAMBDA)
     return arrivalTemp
 
-def get_service_A():
-    selectStream(1)
-    return Exponential(0.5)
+def get_service_A(classe):
+    if classe == 1:
+        selectStream(1)
+        return Exponential(0.2)
+    elif classe == 2:
+        selectStream(2)
+        return Exponential(0.4)
+    else: 
+        selectStream(3)
+        return Exponential(0.1)
+
+
+def get_service_B():
+    selectStream(2)
+    return Exponential(0.8) 
+
+def get_service_P():
+    selectStream(3)
+    return Exponential(0.4)

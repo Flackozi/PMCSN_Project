@@ -17,6 +17,10 @@ SEED = 123456789
 
 REPLICATIONS = 96
 
+MU_A = 2.0  # service rate at A
+MU_B = 1.0  # service rate at B
+MU_P = 0.5  # service rate at P (delay center)
+
 
 
 def set_simulation(model, type):

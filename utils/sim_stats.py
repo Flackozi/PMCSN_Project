@@ -8,7 +8,7 @@ class Track:
 class Time:
     def __init__(self):
         self.arrival = float('inf')       # next external arrival time
-        self.completion_A = float('inf')  # next completion at A (PS min-rem * N)
+        self.completion_A = float('inf')  # next completion at A (PS min-rem * N) | tempo di completamento più piccolo tra i job in A
         self.completion_B = float('inf')  # next completion at B (PS)
         self.completion_P = float('inf')  # next completion at P (delay center)
         self.current = 0.0
@@ -26,7 +26,7 @@ class SimulationStats:
     """
     def __init__(self):
         # arrivals & completions counters
-        self.job_arrived = 0
+        self.job_arrived = 0      # total jobs arrived to the system
 
         self.index_A1 = 0   # completions at A while in visit A1
         self.index_A2 = 0
