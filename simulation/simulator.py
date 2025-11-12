@@ -56,6 +56,13 @@ def finite_simulation(stop):
             stats.A2_wait_times.append((stats.t.current, A2_wait))
             stats.A3_wait_times.append((stats.t.current, A3_wait))
 
+            stats.A_resp_times.append((stats.t.current, A_resp))
+            stats.B_resp_times.append((stats.t.current, B_resp))
+            stats.A1_resp_times.append((stats.t.current, A1_resp))
+            stats.A2_resp_times.append((stats.t.current, A2_resp))
+            stats.A3_resp_times.append((stats.t.current, A3_resp))
+
+
             # --- istantanee di utilizzo e numero medio fino a ora (transiente cumulato) ---
             # horizon = max(stats.t.current, 1e-12)
             # A_util = stats.area_A.service / horizon
@@ -79,9 +86,10 @@ def finite_simulation(stop):
 
             current_checkpoint += 1
             
+    stats.calculate_area_queue()  
 
     # horizon = stats.t.current (last time)
-    return return_stats(stats, stats.t.current), stats
+    return return_stats(stats, stats.t.current, s), stats
 
 def update_completion(jobs, current_time):
     if not jobs:
@@ -196,3 +204,56 @@ def execute(stats, stop):
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
 
         
+def return_stats(stats, horizon, s):
+    """Ritorna le statistiche finali della simulazione"""
+    # medie finali
+    comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
+    comp_B = stats.index_B
+    comp_P = stats.index_P
+
+    # A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
+    # B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+
+    # A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
+    # B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+
+    return {
+        "seed": s,
+
+        # statistiche centro A
+        "A_avg_resp": stats.area_A.node / comp_A if comp_A > 0 else 0.0,
+        "A_avg_wait": stats.area_A.queue / comp_A if comp_A > 0 else 0.0,
+        "A_utilization": stats.area_A.service / horizon if horizon > 0 else 0.0,
+        "A_avg_num_job": stats.area_A.node / horizon if horizon > 0 else 0.0,
+
+        # statistiche centro B
+        "B_avg_resp": stats.area_B.node / comp_B if comp_B > 0 else 0.0,
+        "B_avg_wait": stats.area_B.queue / comp_B if comp_B > 0 else 0.0,
+        "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
+        "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
+
+        # statisctiche job di classe 1 su A
+        "A1_avg_resp": stats.area_A1.node / stats.index_A1 if stats.index_A1 > 0 else 0.0,
+        "A1_avg_wait": stats.area_A1.queue / stats.index_A1 if stats.index_A1 > 0 else 0.0,
+        "A1_avg_serv": stats.area_A1.service / stats.index_A1 if stats.index_A1 > 0 else 0.0,
+        
+        # statistiche job di classe 2 su A
+        "A2_avg_resp": stats.area_A2.node / stats.index_A2 if stats.index_A2 > 0 else 0.0,
+        "A2_avg_wait": stats.area_A2.queue / stats.index_A2 if stats.index_A2 > 0 else 0.0,
+        "A2_avg_serv": stats.area_A2.service / stats.index_A2 if stats.index_A2 > 0 else 0.0,
+
+        # statistiche job di classe 3 su A
+        "A3_avg_resp": stats.area_A3.node / stats.index_A3 if stats.index_A3 > 0 else 0.0,
+        "A3_avg_wait": stats.area_A3.queue / stats.index_A3 if stats.index_A3 > 0 else 0.0,
+        "A3_avg_serv": stats.area_A3.service / stats.index_A3 if stats.index_A3 > 0 else 0.0,
+
+        # CONTINUARE DA QUI #########################################
+
+        "job_arrived": stats.job_arrived,
+        "completions_A1": stats.index_A1,
+        "completions_A2": stats.index_A2,
+        "completions_A3": stats.index_A3,
+        "completions_B": stats.index_B,
+        "completions_P": stats.index_P,
+        "horizon": horizon
+    }

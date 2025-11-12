@@ -74,10 +74,15 @@ class SimulationStats:
         # optional transient time series
         self.A_wait_times  = []
         self.B_wait_times  = []
-        self.P_wait_times  = []
         self.A1_wait_times = []
         self.A2_wait_times = []
         self.A3_wait_times = []
+
+        self.A_resp_times  = []
+        self.B_resp_times  = []
+        self.A1_resp_times = []
+        self.A2_resp_times = []
+        self.A3_resp_times = []
 
         # id progressivo dei job (lo usiamo in simulator.py)
         self.next_job_id = 0
@@ -104,6 +109,15 @@ class SimulationStats:
         self.index_P  = 0
 
         self.next_job_id = 0
+
+    def calculate_area_queue(self):
+        """Calcola l'area della coda come differenza tra area nodo e area servizio"""
+        self.area_A1.queue = self.area_A1.node - self.area_A1.service
+        self.area_A2.queue = self.area_A2.node - self.area_A2.service
+        self.area_A3.queue = self.area_A3.node - self.area_A3.service
+        self.area_A.queue  = self.area_A.node  - self.area_A.service
+        self.area_B.queue  = self.area_B.node  - self.area_B.service
+
 
         
 class ReplicationStats:
