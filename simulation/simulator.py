@@ -232,7 +232,7 @@ def return_stats(stats, horizon, s):
         "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
         "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
 
-        # statisctiche job di classe 1 su A
+        # statistiche job di classe 1 su A
         "A1_avg_resp": stats.area_A1.node / stats.index_A1 if stats.index_A1 > 0 else 0.0,
         "A1_avg_wait": stats.area_A1.queue / stats.index_A1 if stats.index_A1 > 0 else 0.0,
         "A1_avg_serv": stats.area_A1.service / stats.index_A1 if stats.index_A1 > 0 else 0.0,
@@ -248,6 +248,7 @@ def return_stats(stats, horizon, s):
         "A3_avg_serv": stats.area_A3.service / stats.index_A3 if stats.index_A3 > 0 else 0.0,
 
         # CONTINUARE DA QUI #########################################
+        # mancano statistiche del sistema
 
         "job_arrived": stats.job_arrived,
         "completions_A1": stats.index_A1,
