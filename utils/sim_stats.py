@@ -79,6 +79,32 @@ class SimulationStats:
         self.A2_wait_times = []
         self.A3_wait_times = []
 
+        # id progressivo dei job (lo usiamo in simulator.py)
+        self.next_job_id = 0
+    
+    def reset(self, start_time):
+        """Resettiamo tutte le variabili per una nuova simulazione"""
+        self.t.current = start_time
+        self.t.completion_A = float('inf')
+        self.t.completion_B = float('inf')
+        
+        #stato dei nodi
+        self.A_jobs.clear()
+        self.B_jobs.clear()
+
+         # aree
+        self.area_A = Track()
+        self.area_B = Track()
+        self.area_P = Track()
+
+        # contatori base
+        self.job_arrived = 0
+        self.index_A1 = self.index_A2 = self.index_A3 = 0
+        self.index_B  = 0
+        self.index_P  = 0
+
+        self.next_job_id = 0
+
         
 class ReplicationStats:
     """

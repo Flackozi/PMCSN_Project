@@ -26,9 +26,60 @@ def finite_simulation(stop):
 
     while (stats.t.arrival < STOP) or (stats.A_jobs > 0) or (stats.B_jobs) or (len(return_times_P) > 0):
         execute(stats, STOP)
-    
+        if current_checkpoint < len(time_checkpoints) and stats.t.current >= time_checkpoints[current_checkpoint]:
+            # snapshot
+            comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
+            comp_B = stats.index_B
+            comp_P = stats.index_P
 
-    stats.calculate_area_queue()
+            # medie di attesa e di permanenza (cumulative fino al checkpoint)
+            A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
+            B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+            # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
+            # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
+            
+            # tempo di risposta del centro = area.node / completamenti
+            A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
+            B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+
+            A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
+            A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
+            A3_wait = (stats.area_A3.node - stats.area_A3.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
+            
+            A1_resp = (stats.area_A1.node / stats.index_A1) if stats.index_A1 > 0 else 0.0
+            A2_resp = (stats.area_A2.node / stats.index_A2) if stats.index_A2 > 0 else 0.0
+            A3_resp = (stats.area_A3.node / stats.index_A3) if stats.index_A3 > 0 else 0.0
+
+            stats.A_wait_times.append((stats.t.current, A_wait))
+            stats.B_wait_times.append((stats.t.current, B_wait))
+            stats.A1_wait_times.append((stats.t.current, A1_wait))
+            stats.A2_wait_times.append((stats.t.current, A2_wait))
+            stats.A3_wait_times.append((stats.t.current, A3_wait))
+
+            # --- istantanee di utilizzo e numero medio fino a ora (transiente cumulato) ---
+            # horizon = max(stats.t.current, 1e-12)
+            # A_util = stats.area_A.service / horizon
+            # B_util = stats.area_B.service / horizon
+            # A_N    = stats.area_A.node    / horizon
+            # B_N    = stats.area_B.node    / horizon
+
+            # # --- salva punti (t, valore) ---
+            # tchk = stats.t.current
+            # stats.A_wait_times.append((tchk, A_wait))
+            # stats.B_wait_times.append((tchk, B_wait))
+            # stats.P_service_times.append((tchk, P_serv))
+
+            # stats.A_sys_times.append((tchk, A_sys))
+            # stats.B_sys_times.append((tchk, B_sys))
+
+            # stats.A_util_times.append((tchk, A_util))
+            # stats.B_util_times.append((tchk, B_util))
+            # stats.A_N_times.append((tchk, A_N))
+            # stats.B_N_times.append((tchk, B_N))
+
+            current_checkpoint += 1
+            
+
     # horizon = stats.t.current (last time)
     return return_stats(stats, stats.t.current), stats
 
@@ -41,9 +92,6 @@ def update_completion(jobs, current_time):
         return current_time + min_remaining * n
 
 def execute(stats, stop):
-    
-    next_job_id = 0 # il next_job_id è un contatore globale per assegnare un id diverso ad ogni job
-
     if return_times_P:
         stats.t.completion_P = min(return_times_P) #prendo l'elemento che ha il tempo di ritorno in A più piccolo
     else: 
@@ -54,14 +102,31 @@ def execute(stats, stop):
 
     if stats.A_jobs:
         nA = len(stats.A_jobs)
-        stats.area_A += dt * nA #aggiorno area sotto la curva
+        stats.area_A.node += dt * nA #aggiorno area sotto la curva
+        stats.area_A.service += dt
+
+        #Per il calcolo delle statistiche per le singole classi in A
+        kA1 = sum(1 for j in stats.A_jobs.values() if j["classe"] == 1)
+        kA2 = sum(1 for j in stats.A_jobs.values() if j["classe"] == 2)
+        kA3 = nA - kA1 - kA2  # più veloce
+
+        # aree per classe in A: node = dt * #job_classe; service = dt * quota_classe
+        stats.area_A1.node += dt * kA1
+        stats.area_A2.node += dt * kA2
+        stats.area_A3.node += dt * kA3
+
+        stats.area_A1.service += dt * (kA1 / nA)
+        stats.area_A2.service += dt * (kA2 / nA)
+        stats.area_A3.service += dt * (kA3 / nA)
+
         delta = dt / nA # quanto di tempo che ogni job ha a disposizione (tempo a disposizione / numero di job)
         for job in stats.A_jobs.value():
             job["rem"] -= delta
 
     if stats.B_jobs :
         nB = len(stats.B_jobs)
-        stats.area_B += dt * nB
+        stats.area_B.node += dt * nB
+        stats.area_B.service += dt
         delta = dt / nB
         for job in stats.B_jobs.value():
             job["rem"] -= delta
@@ -70,8 +135,8 @@ def execute(stats, stop):
 
     if stats.t.current == stats.t.arrival: 
         #arrivo esterno in A
-        jid = next_job_id
-        next_job_id += 1
+        jid = stats.next_job_id
+        stats.next_job_id += 1
         stats.A_jobs[jid] =  {"classe": 1, "rem": get_service_A(1)} #aggiungo il job di classe 1 ad A
 
         stats.t.arrival = GetArrival()
@@ -89,20 +154,23 @@ def execute(stats, stop):
 
         if job["classe"] == 1:
             #job di classe 1, va in B
-            jid = next_job_id 
-            next_job_id += 1
+            jid = stats.next_job_id 
+            stats.next_job_id += 1
             stats.B_jobs[jid] = {"rem": get_service_B()} #aggiungo il job a B
-            #stats.index_A1 += 1 incremento il contatore dei job completati in A1
+            stats.index_A1 += 1 
             stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
         elif job["classe"] == 2:
             #job di classe 2, va in P
             service_P = get_service_P()
             return_time = stats.t.current + service_P #calcolo il tempo di ritorno in A
             return_times_P.append(return_time) #aggiungo il tempo di ritorno in A alla lista
-            #stats.index_A2 += 1
-        # elif job["classe"] == 3:
-        #     #job di classe 3, esce dal sistema
-        #     stats.index_A3 += 1
+            stats.index_A2 += 1
+            stats.area_P.service += service_P #aggiorno l'area di P (tempo di servizio cumulativo)
+            stats.area_P.node += service_P #aggiorno l'area di P (numero di job cumulativo, in questo caso 1 job per service_P)
+            
+        elif job["classe"] == 3:
+             #job di classe 3, esce dal sistema
+             stats.index_A3 += 1
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     
     elif stats.t.current == stats.t.completion_B: #completamento in B
@@ -110,8 +178,9 @@ def execute(stats, stop):
         jid, job = min(stats.B_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.B_jobs[jid] #rimuovo il job da B
         
-        jid = next_job_id 
-        next_job_id += 1
+        stats.index_B += 1
+        jid = stats.next_job_id  
+        stats.next_job_id += 1
         stats.A_jobs[jid] = {"classe": 2, "rem": get_service_A(2)} #aggiungo il job a A
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
@@ -120,8 +189,9 @@ def execute(stats, stop):
     elif stats.t.current == stats.t.completion_P: #completamento in P
 
         return_times_P.remove(stats.t.current)
-        jid = next_job_id 
-        next_job_id += 1
+        stats.index_P += 1
+        jid = stats.next_job_id  
+        stats.next_job_id  += 1
         stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)} #aggiungo il job a A
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
 
