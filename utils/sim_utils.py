@@ -52,19 +52,43 @@ def GetArrival():
 def get_service_A(classe):
     if classe == 1:
         selectStream(1)
-        return Exponential(0.2)
+        return 0.2
     elif classe == 2:
         selectStream(2)
-        return Exponential(0.4)
+        return 0.4
     else: 
         selectStream(3)
-        return Exponential(0.1)
+        return 0.1
 
 
 def get_service_B():
     selectStream(2)
-    return Exponential(0.8) 
+    return 0.8
 
 def get_service_P():
     selectStream(3)
-    return Exponential(0.4)
+    return 0.4
+
+def append_stats(replicationStats, results, stats):
+    """
+    Salva, per una replica, tutti i valori contenuti in `results`
+    (cioè in return_stats) dentro replicationStats.metrics.
+
+    Esempio:
+      results["A_avg_wait"] -> replicationStats.metrics["A_avg_wait"].append(...)
+    """
+    for key, value in results.items():
+        replicationStats.metrics[key].append(value)
+
+    replicationStats.A_wait_interval.append(stats.A_wait_times)
+    replicationStats.B_wait_interval.append(stats.B_wait_times)
+    replicationStats.A1_wait_interval.append(stats.A1_wait_times)
+    replicationStats.A2_wait_interval.append(stats.A2_wait_times)
+    replicationStats.A3_wait_interval.append(stats.A3_wait_times)
+
+    replicationStats.A_resp_interval.append(stats.A_resp_times)
+    replicationStats.B_resp_interval.append(stats.B_resp_times)
+    replicationStats.A1_resp_interval.append(stats.A1_resp_times)
+    replicationStats.A2_resp_interval.append(stats.A2_resp_times)
+    replicationStats.A3_resp_interval.append(stats.A3_resp_times)
+    
