@@ -5,17 +5,18 @@ SIM_TYPE = FINITE
 
 INFINITY = float('inf')
 
+LAMBDA = 1.2 # arrival rate
 
 BASE = 1
 MODEL = BASE
 
 START = 0.0
-STOP = 86400  # terminal (close the door) time
+STOP = 10000 #86400  # terminal (close the door) time
 STOP_ANALYSIS = 300000
 
 SEED = 123456789
 
-REPLICATIONS = 96
+REPLICATIONS = 10
 
 MU_A = 2.0  # service rate at A
 MU_B = 1.0  # service rate at B

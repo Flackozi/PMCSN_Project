@@ -134,75 +134,54 @@ class ReplicationStats:
 
     def __init__(self):
         # --- Meta information ---
-        self.seeds = []                # RNG seeds used per replication
-        self.A_num_servers = []        # Number of servers in A (if scalable)
-        self.B_num_servers = []
-        # self.P_num_servers = []        # Usually constant (external)
+        self.seed = []                # RNG seeds used per replication
 
         # --- System-level overall metrics ---
-        self.sys_wait_times = []       # System average waiting time
-        self.sys_delays = []           # End-to-end response time
-        self.sys_service_times = []    # Total service time (sum of all centers)
-        self.sys_number_node = []      # Avg number of jobs in the system
-        self.sys_throughput = []       # System throughput
-        self.sys_utilization = []      # (Optional) overall utilization
+        self.system_avg_wait = []         # System average waiting time
+        self.system_avg_response_time = []# System average response time                 
+        self.system_avg_service_time = [] # Total service time (sum of all centers)
+        self.system_utilization = []      # (Optional) overall utilization
 
         # --- Node A (aggregated across all visits) ---
-        self.A_wait_times = []         # Average waiting time at A
-        self.A_delays = []             # Response time at A
-        self.A_service_times = []      # Service time at A
+        self.A_avg_wait = []           # Average waiting time at A
+        self.A_avg_resp = []           # Average response time at A
+        self.A_avg_serv = []           # Service time at A
         self.A_utilization = []        # Utilization of A
-        self.A_number_node = []        # Avg number of jobs in A
-        self.A_number_queue = []       # Avg number of waiting jobs in A
+        self.A_avg_num_job = []        # Avg number of jobs in A
 
         # --- Node B ---
-        self.B_wait_times = []         # Average waiting time at B
-        self.B_delays = []             # Response time at B
-        self.B_service_times = []      # Service time at B
+        self.B_avg_wait = []           # Average waiting time at B
+        self.B_avg_serv = []           # Service time at B
+        self.B_avg_resp = []           # Average response time at B 
         self.B_utilization = []        # Utilization of B
-        self.B_number_node = []        # Avg number of jobs in B
-        self.B_number_queue = []       # Avg number of waiting jobs in B
+        self.B_avg_num_job = []        # Avg number of jobs in B
 
-        # --- Node P (external payment provider) ---
-        # Only delay metrics are tracked since P is not under our control
-        self.P_delays = []             # End-to-end delay at P (service only)
-        self.P_service_times = []      # Service times drawn for P
-        self.P_wait_times = []         # Optional: same as delay if no queue
 
-        # --- A's three visits (A1, A2, A3) ---
-        # A1: initial request (Class 1), A2: after B(Class 2), A3: after P (Class 3)
-        self.A1_jobs_leaving = []      # Completed jobs at A1
-        self.A1_wait_times = []
-        self.A1_delays = []
-        self.A1_service_times = []
-        self.A1_utilization = []
-        self.A1_number_node = []
-        self.A1_number_queue = []
+        self.A1_avg_wait = []          # Average waiting time at A1
+        self.A1_avg_resp = []          # Average response time at A1
+        self.A1_avg_serv = []          # Service time at A1
 
-        self.A2_jobs_leaving = []      # Completed jobs at A2
-        self.A2_wait_times = []
-        self.A2_delays = []
-        self.A2_service_times = []
-        self.A2_utilization = []
-        self.A2_number_node = []
-        self.A2_number_queue = []
+        self.A2_avg_wait = []          # Average waiting time at A2
+        self.A2_avg_resp = []          # Average response time at A2
+        self.A2_avg_serv = []          # Service time at A2
 
-        self.A3_jobs_leaving = []      # Completed jobs at A3
-        self.A3_wait_times = []
-        self.A3_delays = []
-        self.A3_service_times = []
-        self.A3_utilization = []
-        self.A3_number_node = []
-        self.A3_number_queue = []
+        self.A3_avg_wait = []          # Average waiting time at A3
+        self.A3_avg_resp = []          # Average response time at A3
+        self.A3_avg_serv = []          # Service time at A3
 
         # # --- Time-series data (for transient analysis) ---
-        # self.A_wait_interval = []      # A wait-time trace over time
-        # self.B_wait_interval = []      # B wait-time trace
-        # self.P_wait_interval = []      # P delay trace (if needed)
-        # self.A1_wait_interval = []     # Time series for A1
-        # self.A2_wait_interval = []     # Time series for A2
-        # self.A3_wait_interval = []     # Time series for A3
-        # self.sys_delay_interval = []   # System response trace (for steady-state)
+        self.A_wait_interval = []      # A wait-time trace over time
+        self.B_wait_interval = []      # B wait-time trace
+        self.A1_wait_interval = []     # Time series for A1
+        self.A2_wait_interval = []     # Time series for A2
+        self.A3_wait_interval = []     # Time series for A3
+
+        self.A_resp_interval = []       # A response-time trace over time
+        self.B_resp_interval = []       # B response-time trace
+        self.A1_resp_interval = []     # Time series for A1
+        self.A2_resp_interval = []     # Time series for A2
+        self.A3_resp_interval = []     # Time series for A3
+
 
         # # --- Batch Means (for infinite-run analysis) ---
         # self.A_batch_means = []        # Average wait per batch (A)

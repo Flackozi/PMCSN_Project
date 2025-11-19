@@ -24,7 +24,7 @@ def finite_simulation(stop):
     # schedule first external arrival
     stats.t.arrival = GetArrival()
 
-    while (stats.t.arrival < STOP) or (stats.A_jobs > 0) or (stats.B_jobs) or (len(return_times_P) > 0):
+    while (stats.t.arrival < STOP) or (stats.A_jobs) or (stats.B_jobs) or (len(return_times_P) > 0):
         execute(stats, STOP)
         if current_checkpoint < len(time_checkpoints) and stats.t.current >= time_checkpoints[current_checkpoint]:
             # snapshot
@@ -95,7 +95,7 @@ def update_completion(jobs, current_time):
     if not jobs:
         return INFINITY
     else:
-        min_remaining = min(job["remaining"] for job in jobs.values())
+        min_remaining = min(job["rem"] for job in jobs.values())
         n = len(jobs)
         return current_time + min_remaining * n
 
@@ -103,6 +103,7 @@ def execute(stats, stop):
     if return_times_P:
         stats.t.completion_P = min(return_times_P) #prendo l'elemento che ha il tempo di ritorno in A più piccolo
     else: 
+        stats.t.completion_P = INFINITY
         stats.t.return_P = INFINITY
 
     stats.t.next = min(stats.t.arrival, stats.t.completion_A, stats.t.completion_B, stats.t.completion_P) #prendo il tempo del prossimo evento    
@@ -128,7 +129,7 @@ def execute(stats, stop):
         stats.area_A3.service += dt * (kA3 / nA)
 
         delta = dt / nA # quanto di tempo che ogni job ha a disposizione (tempo a disposizione / numero di job)
-        for job in stats.A_jobs.value():
+        for job in stats.A_jobs.values():
             job["rem"] -= delta
 
     if stats.B_jobs :
@@ -136,12 +137,13 @@ def execute(stats, stop):
         stats.area_B.node += dt * nB
         stats.area_B.service += dt
         delta = dt / nB
-        for job in stats.B_jobs.value():
+        for job in stats.B_jobs.values():
             job["rem"] -= delta
 
     stats.t.current = stats.t.next #avanziamo l'orologio
 
     if stats.t.current == stats.t.arrival: 
+        print(f"ARRIVAL | current: {stats.t.current:.4f}")
         #arrivo esterno in A
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -156,7 +158,7 @@ def execute(stats, stop):
         stats.job_arrived += 1 #incrementiamo il contatore dei job arrivati
 
     elif stats.t.current == stats.t.completion_A: #completamento in A
-
+        print(f"COMPLETION_A | current: {stats.t.current:.4f}")
         jid, job = min(stats.A_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.A_jobs[jid] #rimuovo il job da A
 
@@ -174,7 +176,7 @@ def execute(stats, stop):
             return_times_P.append(return_time) #aggiungo il tempo di ritorno in A alla lista
             stats.index_A2 += 1
             stats.area_P.service += service_P #aggiorno l'area di P (tempo di servizio cumulativo)
-            stats.area_P.node += service_P #aggiorno l'area di P (numero di job cumulativo, in questo caso 1 job per service_P)
+            
             
         elif job["classe"] == 3:
              #job di classe 3, esce dal sistema
@@ -182,7 +184,7 @@ def execute(stats, stop):
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     
     elif stats.t.current == stats.t.completion_B: #completamento in B
-
+        print(f"COMPLETION_B | current: {stats.t.current:.4f}")
         jid, job = min(stats.B_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.B_jobs[jid] #rimuovo il job da B
         
@@ -195,12 +197,14 @@ def execute(stats, stop):
         stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di B
 
     elif stats.t.current == stats.t.completion_P: #completamento in P
-
-        return_times_P.remove(stats.t.current)
+        print(f"COMPLETION_P | current: {stats.t.current:.4f}")
+        # if return_times_P:
+        return_times_P.remove(stats.t.current) #rimuovo il tempo di ritorno in A dalla lista
         stats.index_P += 1
         jid = stats.next_job_id  
         stats.next_job_id  += 1
         stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)} #aggiungo il job a A
+
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
 
         
@@ -209,13 +213,11 @@ def return_stats(stats, horizon, s):
     # medie finali
     comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
     comp_B = stats.index_B
-    comp_P = stats.index_P
+    
 
-    # A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
-    # B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
-
-    # A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
-    # B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+    system_avg_response = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
+    system_avg_service = (stats.area_A.service + stats.area_B.service + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
+    system_avg_wait = system_avg_response - system_avg_service
 
     return {
         "seed": s,
@@ -225,10 +227,12 @@ def return_stats(stats, horizon, s):
         "A_avg_wait": stats.area_A.queue / comp_A if comp_A > 0 else 0.0,
         "A_utilization": stats.area_A.service / horizon if horizon > 0 else 0.0,
         "A_avg_num_job": stats.area_A.node / horizon if horizon > 0 else 0.0,
+        "A_avg_serv": stats.area_A.service / comp_A if comp_A > 0 else 0.0,
 
         # statistiche centro B
         "B_avg_resp": stats.area_B.node / comp_B if comp_B > 0 else 0.0,
         "B_avg_wait": stats.area_B.queue / comp_B if comp_B > 0 else 0.0,
+        "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
         "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
         "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
 
@@ -247,8 +251,12 @@ def return_stats(stats, horizon, s):
         "A3_avg_wait": stats.area_A3.queue / stats.index_A3 if stats.index_A3 > 0 else 0.0,
         "A3_avg_serv": stats.area_A3.service / stats.index_A3 if stats.index_A3 > 0 else 0.0,
 
-        # CONTINUARE DA QUI #########################################
-        # mancano statistiche del sistema
+        # ---- METRICHE DI SISTEMA (A3, ingresso→uscita) ----
+        'total_completed': stats.index_A3,
+        'system_avg_response_time': system_avg_response,
+        'system_avg_service_time': system_avg_service,
+        'system_utilization': (stats.area_A.service + stats.area_B.service + stats.area_P.service) / horizon if horizon > 0 else 0.0,
+        'system_avg_wait': system_avg_wait,
 
         "job_arrived": stats.job_arrived,
         "completions_A1": stats.index_A1,
@@ -257,4 +265,7 @@ def return_stats(stats, horizon, s):
         "completions_B": stats.index_B,
         "completions_P": stats.index_P,
         "horizon": horizon
+
+        
+
     }

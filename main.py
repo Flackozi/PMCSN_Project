@@ -3,6 +3,7 @@ from utils.variables import *
 from  utils.sim_utils import *
 from utils.sim_stats import *
 from simulation.simulator import *
+import traceback
 
 def start_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -25,9 +26,12 @@ def start_finite_sim():
     # else:
     stop = STOP
 
+    clear_file(file_name)
     for i in range(vs.REPLICATIONS):
         if vs.MODEL == BASE:
+            print(f"start {i+1} replication")
             results, stats = finite_simulation(stop)
+            print(f"end {i+1} replication")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
             type = "replications"
@@ -41,8 +45,11 @@ def start():
         if choice == 1:
             get_simulation(choice)
             start_simulation()
-    except ValueError:
-        print("Error: invalid choice.")    
+    except ValueError as e:
+        print(f"Errore di conversione: {str(e)}")
+        print(f"Tipo di errore: {type(e).__name__}")
+        traceback.print_exc()    
 
 
-start()               
+
+start()
