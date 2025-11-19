@@ -74,11 +74,35 @@ def append_stats(replicationStats, results, stats):
     Salva, per una replica, tutti i valori contenuti in `results`
     (cioè in return_stats) dentro replicationStats.metrics.
 
-    Esempio:
-      results["A_avg_wait"] -> replicationStats.metrics["A_avg_wait"].append(...)
     """
-    for key, value in results.items():
-        replicationStats.metrics[key].append(value)
+    replicationStats.system_avg_wait.append(results['system_avg_wait'])
+    replicationStats.system_avg_response_time.append(results['system_avg_response_time'])   
+    replicationStats.system_avg_service_time.append(results['system_avg_service_time'])
+    replicationStats.system_utilization.append(results['system_utilization'])
+
+    replicationStats.A_avg_wait.append(results['A_avg_wait'])
+    replicationStats.A_avg_resp.append(results['A_avg_resp'])
+    replicationStats.A_avg_serv.append(results['A_avg_serv'])
+    replicationStats.A_utilization.append(results['A_utilization'])
+    replicationStats.A_avg_num_job.append(results['A_avg_num_job'])
+
+    replicationStats.B_avg_wait.append(results['B_avg_wait'])
+    replicationStats.B_avg_serv.append(results['B_avg_serv'])
+    replicationStats.B_avg_resp.append(results['B_avg_resp'])
+    replicationStats.B_utilization.append(results['B_utilization'])
+    replicationStats.B_avg_num_job.append(results['B_avg_num_job'])
+
+    replicationStats.A1_avg_wait.append(results['A1_avg_wait'])
+    replicationStats.A1_avg_resp.append(results['A1_avg_resp'])
+    replicationStats.A1_avg_serv.append(results['A1_avg_serv'])
+
+    replicationStats.A2_avg_wait.append(results['A2_avg_wait'])
+    replicationStats.A2_avg_resp.append(results['A2_avg_resp'])
+    replicationStats.A2_avg_serv.append(results['A2_avg_serv'])
+
+    replicationStats.A3_avg_wait.append(results['A3_avg_wait'])
+    replicationStats.A3_avg_resp.append(results['A3_avg_resp'])
+    replicationStats.A3_avg_serv.append(results['A3_avg_serv'])  
 
     replicationStats.A_wait_interval.append(stats.A_wait_times)
     replicationStats.B_wait_interval.append(stats.B_wait_times)
