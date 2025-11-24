@@ -86,6 +86,11 @@ class SimulationStats:
 
         # id progressivo dei job (lo usiamo in simulator.py)
         self.next_job_id = 0
+
+        self.next_global_id = 0
+        
+
+        self.job_times = {}  # dizionario in cui mi salvo i tempi di arrivo dei job {job_id: arrival_time} e i tempi di uscita {job_id: departure_time}
     
     def reset(self, start_time):
         """Resettiamo tutte le variabili per una nuova simulazione"""

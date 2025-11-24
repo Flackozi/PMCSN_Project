@@ -8,8 +8,8 @@ import traceback
 def start_simulation():
     if vs.SIM_TYPE == FINITE:
         res = start_finite_sim()
-    # elif vs.SIM_TYPE == INFINITE:
-    #     res = start_infinite_sim()
+    elif vs.SIM_TYPE == INFINITE:
+        res = start_infinite_sim()
     else:
         print("Type not valid")
         exit(1)
