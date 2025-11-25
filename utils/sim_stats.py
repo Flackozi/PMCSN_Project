@@ -123,6 +123,29 @@ class SimulationStats:
         self.area_A.queue  = self.area_A.node  - self.area_A.service
         self.area_B.queue  = self.area_B.node  - self.area_B.service
 
+    def reset_infinite(self):
+        """Resettiamo tutte le variabili per una nuova simulazione infinita"""
+        self.t.current = 0.0
+        self.t.completion_A = float('inf')
+        self.t.completion_B = float('inf')
+        
+        #stato dei nodi
+        self.A_jobs.clear()
+        self.B_jobs.clear()
+
+         # aree
+        self.area_A = Track()
+        self.area_B = Track()
+        self.area_P = Track()
+
+        # contatori base
+        self.job_arrived = 0
+        self.index_A1 = self.index_A2 = self.index_A3 = 0
+        self.index_B  = 0
+        self.index_P  = 0
+
+        self.next_job_id = 0
+
 
         
 class ReplicationStats:

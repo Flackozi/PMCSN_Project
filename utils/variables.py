@@ -1,3 +1,5 @@
+K = 128
+B = 4000
 
 INFINITE = 0
 FINITE = 1
