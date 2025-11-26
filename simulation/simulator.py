@@ -101,6 +101,10 @@ def infinite_simulation(stop):
     stats = SimulationStats()
     stats.reset(START) 
 
+    reset_arrival_temp()         # azzera la variabile globale arrivalTemp
+    stats.reset(START)           # azzera lo stato della simulazione
+    stats.t.arrival = GetArrival()   # primo arrivo esterno FINITO, non +inf
+
     while len(batch_stats.A_avg_wait) < K:
         
         while stats.job_arrived < B:
@@ -235,6 +239,13 @@ def update_completion(jobs, current_time):
         return INFINITY
     else:
         min_remaining = min(job["rem"] for job in jobs.values())
+        
+        # *** AGGIUNGI QUESTO CONTROLLO ***
+        if min_remaining < 0:
+            print(f"[WARNING] min_remaining negativo: {min_remaining}")
+            print(f"  Jobs: {jobs}")
+            min_remaining = 0  # Forza a 0 per evitare tempi nel passato
+        
         n = len(jobs)
         return current_time + min_remaining * n
 
@@ -248,9 +259,8 @@ def execute(stats, stop):
     stats.t.next = min(stats.t.arrival, stats.t.completion_A, stats.t.completion_B, stats.t.completion_P) #prendo il tempo del prossimo evento    
     
     dt = stats.t.next - stats.t.current #tempo che ho a disposizione fino al prossimo evento
-    
 
-    if stats.A_jobs:
+    if len(stats.A_jobs)>0:
         nA = len(stats.A_jobs)
         stats.area_A.node += dt * nA #aggiorno area sotto la curva
         stats.area_A.service += dt
