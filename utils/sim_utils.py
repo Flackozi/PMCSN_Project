@@ -32,7 +32,13 @@ def get_simulation(model):
     
     vs.set_simulation(model, sim)
 
-
+def remove_batch(stats, n):
+    if n < 0:
+        raise ValueError()
+    for attr in dir(stats):
+        value = getattr(stats, attr)
+        if isinstance(value, list):
+            setattr(stats, attr, value[n:])
 
 def reset_arrival_temp():
     global arrivalTemp

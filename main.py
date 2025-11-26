@@ -37,6 +37,21 @@ def start_finite_sim():
             type = "replications"
             sim_type = "standard"
 
+def start_infinite_sim():
+    # replicationStats = ReplicationStats()
+    if vs.MODEL == BASE:
+        file_name = "base_model_infinite_results.csv"
+        print("INFINITE BASE SIMULATION")
+
+    stop = STOP_INFINITE
+
+    clear_file(file_name)
+    batch_stats = infinite_simulation(stop)
+    print("End infinite simulation")
+
+    # type = "batch"
+    # # print_simulation_stats(batch_stats, type, type)
+
 def start():
     print("1. Base model simulation")
     print("2. Base model + 2FA simulation")

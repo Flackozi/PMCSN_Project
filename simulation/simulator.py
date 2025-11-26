@@ -1,3 +1,4 @@
+import traceback
 from utils.sim_utils import*
 from utils.sim_output import *
 from libraries.rngs import *
@@ -104,9 +105,15 @@ def infinite_simulation(stop):
         
         while stats.job_arrived < B:
             execute(stats, stop)
+            
 
         stop_time = stats.t.current - start_time
         start_time = stats.t.current
+
+        stats.calculate_area_queue()
+
+        _check_areas_finite(stats, "infinite_simulation: dopo calculate_area_queue")
+
 
         # snapshot
         comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
@@ -144,21 +151,38 @@ def infinite_simulation(stop):
         stats.A3_resp_times.append((stats.t.current, A3_resp))
 
 
-
-        stats.calculate_area_queue()
-
         # collect replication statistics
         rep_stats = return_stats(stats, stop_time, s)
         write_file(rep_stats, "base_model_infinite_results.csv")
-        append_stats(batch_stats, stats, stats)
+        append_stats(batch_stats, rep_stats, stats)
 
-        
 
         # reset stats for next replication
         stats.reset_infinite()
 
+    if PRINT_PLOT_BATCH == 1:
+        plot_batch(batch_stats.system_avg_response_time, "standard", "system")
+        plot_batch(batch_stats.A_avg_resp, "standard", "center_A")
+        plot_batch(batch_stats.B_avg_resp, "standard", "center_B")
+        plot_batch(batch_stats.A1_avg_resp, "standard", "class_1_A")
+        plot_batch(batch_stats.A2_avg_resp, "standard", "class_2_A")
+        plot_batch(batch_stats.A3_avg_resp, "standard", "class_3_A")
+
+    remove_batch(batch_stats, 25)
+    return batch_stats
 
     
+def _check_areas_finite(stats, where):
+    if not math.isfinite(getattr(stats.area_A, "node", float("nan"))):
+        print(f"[ERROR] area_A.node non finito in: {where}")
+        print(f"  t.current={getattr(stats.t,'current',None)}, t.next={getattr(stats.t,'next',None)}, dt={(getattr(stats.t,'next',0)-getattr(stats.t,'current',0))}")
+        print(f"  arrival={stats.t.arrival}, compA={stats.t.completion_A}, compB={stats.t.completion_B}, compP={stats.t.completion_P}")
+        print(f"  return_times_P={return_times_P}")
+        print(f"  nA={len(stats.A_jobs)}, A_jobs keys={list(stats.A_jobs.keys())}")
+        print(f"  area_A before/after: node={getattr(stats.area_A,'node',None)}, service={getattr(stats.area_A,'service',None)}")
+        traceback.print_stack()
+        raise RuntimeError("area_A.node non finito")
+
 def infinite_prova(stop):
 
     """Simulazione infinita di prova, senza l'utilizzo del batch means. 
@@ -222,12 +246,16 @@ def execute(stats, stop):
         stats.t.return_P = INFINITY
 
     stats.t.next = min(stats.t.arrival, stats.t.completion_A, stats.t.completion_B, stats.t.completion_P) #prendo il tempo del prossimo evento    
+    
     dt = stats.t.next - stats.t.current #tempo che ho a disposizione fino al prossimo evento
+    
 
     if stats.A_jobs:
         nA = len(stats.A_jobs)
         stats.area_A.node += dt * nA #aggiorno area sotto la curva
         stats.area_A.service += dt
+
+        # _check_areas_finite(stats, "execute: dopo aggiornamento area A")
 
         #Per il calcolo delle statistiche per le singole classi in A
         kA1 = sum(1 for j in stats.A_jobs.values() if j["classe"] == 1)
@@ -262,9 +290,6 @@ def execute(stats, stop):
         #arrivo esterno in A
         jid = stats.next_job_id
         stats.next_job_id += 1
-
-        
-
 
         stats.A_jobs[jid] =  {"classe": 1, "rem": get_service_A(1)} #aggiungo il job di classe 1 ad A
 
@@ -303,7 +328,7 @@ def execute(stats, stop):
         elif job["classe"] == 3:
             #job di classe 3, esce dal sistema
             stats.index_A3 += 1
-            stats.job_times[jid]["departure"] = stats.t.current
+            # stats.job_times[jid]["departure"] = stats.t.current
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     

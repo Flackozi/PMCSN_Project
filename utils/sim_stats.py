@@ -106,6 +106,10 @@ class SimulationStats:
         self.area_A = Track()
         self.area_B = Track()
         self.area_P = Track()
+        self.area_A1 = Track()
+        self.area_A2 = Track()
+        self.area_A3 = Track()
+
 
         # contatori base
         self.job_arrived = 0

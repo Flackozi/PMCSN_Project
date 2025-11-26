@@ -15,6 +15,7 @@ MODEL = BASE
 START = 0.0
 STOP = 10000 #86400  # terminal (close the door) time
 STOP_ANALYSIS = 300000
+STOP_INFINITE = float('inf')
 
 SEED = 123456789
 
@@ -24,6 +25,7 @@ MU_A = 2.0  # service rate at A
 MU_B = 1.0  # service rate at B
 MU_P = 0.5  # service rate at P (delay center)
 
+PRINT_PLOT_BATCH = 1
 
 
 def set_simulation(model, type):

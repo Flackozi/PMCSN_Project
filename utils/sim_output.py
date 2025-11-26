@@ -1,5 +1,7 @@
 import csv
-
+import statistics
+import matplotlib.pyplot as plt
+import os
 
 file_path = "simulation/../output/"
 
@@ -20,3 +22,22 @@ def clear_file(file_name):
     with open(path, "w", newline = '', encoding='utf-8') as csvfile:
         write = csv.DictWriter(csvfile, fieldnames=header)
         write.writeheader()
+
+def plot_batch(wait_times, sim_type, name):
+    output_dir = f"simulation/../output/plot/batch/{sim_type}"
+
+    x_values = [index for index in range(len(wait_times)+1)]
+    y_values = [0]
+    for i in range(len(wait_times)):
+        y_values.append(statistics.mean(wait_times[:i+1]))
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x_values, y_values, linestyle='-', color='b')
+    plt.xlabel('Batch')
+    plt.ylabel('Wait time')
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
