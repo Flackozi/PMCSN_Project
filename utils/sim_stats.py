@@ -14,6 +14,7 @@ class Time:
         self.current = 0.0
         self.next = 0.0
         self.last = 0.0
+        self.completion_spike = float('inf')
 
 # -----------------------------
 # SimulationStats (single run)
@@ -91,7 +92,13 @@ class SimulationStats:
         
 
         self.job_times = {}  # dizionario in cui mi salvo i tempi di arrivo dei job {job_id: arrival_time} e i tempi di uscita {job_id: departure_time}
-    
+
+        #scaling dinamico
+        self.layer1_servers = []
+        self.spike_server = {}
+        self.index_spike = 0
+        self.area_spike = Track()
+        
     def reset(self, start_time):
         """Resettiamo tutte le variabili per una nuova simulazione"""
         self.t.current = start_time
@@ -110,6 +117,12 @@ class SimulationStats:
         self.area_A2 = Track()
         self.area_A3 = Track()
 
+        # --- stato scaling dinamico ---
+        self.layer1_servers.clear()
+        self.spike_server.clear()
+        self.index_spike = 0
+        self.area_spike = Track()
+        self.t.completion_spike = float('inf')
 
         # contatori base
         self.job_arrived = 0
@@ -136,6 +149,13 @@ class SimulationStats:
         #stato dei nodi
         self.A_jobs.clear()
         self.B_jobs.clear()
+
+        # --- stato scaling dinamico ---
+        self.layer1_servers.clear()
+        self.spike_server.clear()
+        self.index_spike = 0
+        self.area_spike = Track()
+        self.t.completion_spike = float('inf')
 
          # aree
         self.area_A = Track()

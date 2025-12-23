@@ -66,6 +66,8 @@ def get_service_A(classe):
         selectStream(3)
         return 0.1
 
+def get_service_spike():
+    return Exponential(1 / vs.BASE_MU_SPIKE)
 
 def get_service_B():
     selectStream(2)

@@ -21,11 +21,16 @@ SEED = 123456789
 
 REPLICATIONS = 10
 
-MU_A = 2.0  # service rate at A
-MU_B = 1.0  # service rate at B
-MU_P = 0.5  # service rate at P (delay center)
-
 PRINT_PLOT_BATCH = 1
+
+# --- PARAMETRI DI SCALING ---
+SImax = 70 #calcolato analiticamente usando la distribuzione geometrica
+MIN_SERVERS = 1
+MAX_SERVERS = 2 #calcolato analiticamente 
+RHO_UP = 0.8 #rho target per scalare up
+RHO_DOWN = 0.3 #rho target per scalare down
+BASE_MU_LAYER1 = 1.25     # 1 / mean service time
+BASE_MU_SPIKE = 1.875      # spike più veloce (vertical scaling) -> 1.25 * k = 1.25 * 1.5 perche k > 1
 
 
 def set_simulation(model, type):

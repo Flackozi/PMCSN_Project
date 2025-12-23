@@ -240,7 +240,6 @@ def update_completion(jobs, current_time):
     else:
         min_remaining = min(job["rem"] for job in jobs.values())
         
-        # *** AGGIUNGI QUESTO CONTROLLO ***
         if min_remaining < 0:
             print(f"[WARNING] min_remaining negativo: {min_remaining}")
             print(f"  Jobs: {jobs}")
