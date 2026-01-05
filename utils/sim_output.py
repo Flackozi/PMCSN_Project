@@ -42,3 +42,69 @@ def plot_batch(wait_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
+
+def plot_lambda_t(lambda_times, sim_type, name):
+    """
+    lambda_times: lista di tuple (t, lambda)
+    Salva in output/plot/{sim_type}/{name}.png
+    """
+    output_dir = f"simulation/../output/plot/{sim_type}"
+
+    x_values = [t for t, _ in lambda_times]
+    y_values = [lam for _, lam in lambda_times]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x_values, y_values, linestyle='-')
+    plt.xlabel('Time')
+    plt.ylabel('Lambda(t)')
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_system_avg_response_time_t(system_resp_times, sim_type, name):
+    """
+    system_resp_times: lista di tuple (t, Rsys_running)
+    Salva in output/plot/{sim_type}/{name}.png
+    """
+    output_dir = f"simulation/../output/plot/{sim_type}"
+
+    x_values = [t for t, _ in system_resp_times]
+    y_values = [r for _, r in system_resp_times]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x_values, y_values, linestyle='-')
+    plt.xlabel('Time')
+    plt.ylabel('System avg response time (running)')
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_active_servers_t(layer1_servers_times, sim_type, name):
+    """
+    layer1_servers_times: lista di tuple (t, n_servers)
+    Salva in output/plot/{sim_type}/{name}.png
+    """
+    output_dir = f"simulation/../output/plot/{sim_type}"
+
+    x_values = [t for t, _ in layer1_servers_times]
+    y_values = [n for _, n in layer1_servers_times]
+
+    plt.figure(figsize=(10, 6))
+    plt.step(x_values, y_values, where='post')
+    plt.xlabel('Time')
+    plt.ylabel('Active servers (Layer 1)')
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+

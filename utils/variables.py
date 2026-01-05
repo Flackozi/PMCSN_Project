@@ -9,6 +9,30 @@ INFINITY = float('inf')
 
 LAMBDA = 1.2 # arrival rate
 
+
+
+# LAMBDA_SIN_AMP = 0.3      # ampiezza del seno
+# LAMBDA_PERIOD = 60000     # periodo del seno
+
+# SPIKE_CENTER = 41000      # centro dello spike
+# SPIKE_SIGMA = 1000        # larghezza del picco
+
+# SPIKE_HEIGHT = 0.9        # altezza del picco
+# LAMBDA_MAX = LAMBDA + LAMBDA_SIN_AMP + SPIKE_HEIGHT      # valore massimo di lambda durante la simulazione  
+
+
+LAMBDA_SIN_AMP = 0.3     # sinusoide: 1.2 ± 0.3  -> range ~[0.9, 1.5]
+LAMBDA_PERIOD = 60000.0  # periodo della sinusoide
+
+#Picco anomalo 
+LAMBDA_SPIKE_START = 40000.0  # inizio picco
+LAMBDA_SPIKE_END   = 42000.0  # fine picco
+LAMBDA_SPIKE_HEIGHT = 0.9  # durante il picco aggiunge +0.9 -> max ~2.4
+
+#clamp per evitare valori assurdi
+LAMBDA_MIN = 1e-6
+
+
 BASE = 1
 MODEL = BASE
 

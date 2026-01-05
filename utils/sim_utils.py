@@ -4,8 +4,10 @@ from math import log
 from libraries import rvms
 from libraries.rngs import selectStream, random
 import statistics
+import matplotlib.pyplot as plt
 
 arrivalTemp = vs.START
+arrivalTempScaling = vs.START
 
 def get_simulation(model):
     # print("Select model:")
@@ -43,6 +45,10 @@ def remove_batch(stats, n):
 def reset_arrival_temp():
     global arrivalTemp
     arrivalTemp = vs.START
+    
+def reset_arrival_temp_scaling():
+    global arrivalTempScaling
+    arrivalTempScaling = vs.START
 
 def Exponential(m):
     """Generate an Exponential random variate, use m > 0.0."""
@@ -123,4 +129,86 @@ def append_stats(replicationStats, results, stats):
     replicationStats.A1_resp_interval.append(stats.A1_resp_times)
     replicationStats.A2_resp_interval.append(stats.A2_resp_times)
     replicationStats.A3_resp_interval.append(stats.A3_resp_times)
+
+
+
+def lambda_scaling(t: float) -> float:
+    """
+    Lambda variabile SOLO per scaling:
+    sinusoide attorno a vs.LAMBDA.
+    """
+    base = vs.LAMBDA + vs.LAMBDA_SIN_AMP * math.sin(2 * math.pi * t / vs.LAMBDA_PERIOD)
+
+    spike = 0.0
+    if vs.LAMBDA_SPIKE_START <= t <= vs.LAMBDA_SPIKE_END:
+        spike = vs.LAMBDA_SPIKE_HEIGHT
+
+    lam = base + spike
+    return max(lam, vs.LAMBDA_MIN)
+
+
+
+def GetArrivalScaling(current_time: float) -> float:
+    """
+    Al tempo corrente 'current_time' calcolo lambda_scaling(current_time),
+    poi genero il prossimo inter-arrivo come Exp(mean = 1/lambda).
+    """
+    global arrivalTempScaling
+    selectStream(4)
+
+    lam = lambda_scaling(current_time)
+    inter = Exponential(1.0 / lam)       # Exponential prende la MEDIA
+
+    # mantieniamo la coerenza con il tuo schema arrivalTemp cumulativo
+    arrivalTempScaling += inter
+    return arrivalTempScaling
     
+
+    
+
+# ============================================================
+#  TIME-SERIES (solo per scaling): record + plot
+# ============================================================
+
+# def record_scaling_timeseries(stats, lam_now):
+#     """
+#     Registra 3 serie temporali:
+#       - lambda(t)
+#       - system_avg_response_time(t) (running mean sui completati A3)
+#       - numero server attivi layer1 nel tempo
+
+#     """
+#     t = stats.t.current
+
+#     # crea le liste se non esistono
+#     if not hasattr(stats, "lambda_times"):
+#         stats.lambda_times = []
+#     if not hasattr(stats, "system_resp_times"):
+#         stats.system_resp_times = []
+#     if not hasattr(stats, "layer1_servers_times"):
+#         stats.layer1_servers_times = []
+
+#     # 1) lambda(t)
+#     stats.lambda_times.append((t, lam_now))
+
+#     # 2) system_avg_response_time(t) = (AreaA.node + AreaB.node + service_P) / completati(A3)
+    
+#     comp_A3 = getattr(stats, "index_A3", 0)
+#     if comp_A3 > 0:
+#         Rsys = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / comp_A3
+#     else:
+#         Rsys = 0.0
+#     stats.system_resp_times.append((t, Rsys))
+
+#     # 3) numero di server attivi nel tempo
+#     n_servers = len(getattr(stats, "layer1_servers", []))
+#     stats.layer1_servers_times.append((t, n_servers))
+
+
+# def _unzip(series):
+#     if not series:
+#         return [], []
+#     xs, ys = zip(*series)
+#     return list(xs), list(ys)
+
+

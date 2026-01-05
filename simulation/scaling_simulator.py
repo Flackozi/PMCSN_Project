@@ -138,7 +138,14 @@ def execute(stats, stop):
         print(f"ARRIVAL | current: {stats.t.current:.4f}")
 
         # SCALING ORIZZONTALE: aggiorno il numero di server del layer 1
-        adjust_servers_layer1(stats, lambda_current=vs.LAMBDA)
+        # SCALING ORIZZONTALE: usa lambda variabile
+        lam_now = lambda_scaling(stats.t.current)
+        adjust_servers_layer1(stats, lambda_current=lam_now)
+
+        # (opzionale) salva lambda per i plot
+        if not hasattr(stats, "lambda_times"):
+            stats.lambda_times = []
+        stats.lambda_times.append((stats.t.current, lam_now))
 
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -148,7 +155,7 @@ def execute(stats, stop):
         stats.job_times[jid] = {"arrival": stats.t.current, "departure": None}
         stats.job_arrived += 1
 
-        stats.t.arrival = GetArrival()
+        stats.t.arrival = GetArrivalScaling(stats.t.current)
         if stats.t.arrival > stop:
             stats.t.last = stats.t.current
             stats.t.arrival = INFINITY
@@ -258,7 +265,7 @@ def scaling_finite_simulation(stop):
     return_times_P = []
 
     s = getSeed()
-    reset_arrival_temp()
+    reset_arrival_temp_scaling()
 
     stats = SimulationStats()
     stats.reset(vs.START)
@@ -267,7 +274,7 @@ def scaling_finite_simulation(stop):
     stats.layer1_servers = [{"id": 0, "jobs": {}}]
 
     # primo arrivo esterno
-    stats.t.arrival = GetArrival()
+    stats.t.arrival = GetArrivalScaling(stats.t.current)
 
     while (
     (stats.t.arrival < stop)
@@ -310,6 +317,22 @@ def scaling_finite_simulation(stop):
             stats.A2_resp_times.append((stats.t.current, A2_resp))
             stats.A3_resp_times.append((stats.t.current, A3_resp))
 
+            lam_now = lambda_scaling(stats.t.current)
+
+            if not hasattr(stats, "lambda_times"):
+                stats.lambda_times = []
+            stats.lambda_times.append((stats.t.current, lam_now))
+
+            if not hasattr(stats, "layer1_servers_times"):
+                stats.layer1_servers_times = []
+            stats.layer1_servers_times.append((stats.t.current, len(stats.layer1_servers)))
+
+            if not hasattr(stats, "system_resp_times"):
+                stats.system_resp_times = []
+            comp_A3 = stats.index_A3
+            Rsys = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / comp_A3 if comp_A3 > 0 else 0.0
+            stats.system_resp_times.append((stats.t.current, Rsys))
+
             current_checkpoint += 1
 
     stats.calculate_area_queue()
@@ -324,7 +347,7 @@ def scaling_finite_simulation(stop):
 def scaling_infinite_simulation(stop):
     """
     Simulazione INFINITA con scaling dinamico.
-    (Versione semplice: gira fino a 'stop' e poi calcola le medie)
+    
     """
     global return_times_P
     return_times_P = []
@@ -332,14 +355,16 @@ def scaling_infinite_simulation(stop):
     batch_stats = ReplicationStats()
 
     s = getSeed()
-    reset_arrival_temp()
+    reset_arrival_temp_scaling()
 
     stats = SimulationStats()
     stats.reset(vs.START)
 
     stats.layer1_servers = [{"id": 0, "jobs": {}}]
 
-    stats.t.arrival = GetArrival()
+    stats.t.arrival = GetArrivalScaling(stats.t.current)
+
+    start_time = stats.t.current
 
     while len(batch_stats.A_avg_wait) < vs.K:          # ciclo sui batch
         stats.job_arrived = 0                          # reset counter arrivi batch
@@ -370,10 +395,12 @@ def scaling_infinite_simulation(stop):
         stats.B_resp_times.append((stats.t.current, B_resp))
 
         # aggiungi batch alle statistiche globali
-        append_stats(batch_stats, stats)
+        rep_stats = return_stats(stats, stop_time, s)
+        # scrivo le statistiche del batch su file (analogo a quanto fatto nel modello base)
+        write_file(rep_stats, "scaling_model_infinite_results.csv")
+        append_stats(batch_stats, rep_stats, stats)
 
-        # reset aree e contatori del batch (non l’intera simulazione)
-        stats.reset_batch()
+        
 
     print("End infinite simulation (batch means)")
     return batch_stats

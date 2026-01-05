@@ -72,6 +72,11 @@ def start_scaling_sim():
             for i in range(vs.REPLICATIONS):
                 print(f"start scaling replication {i+1}")
                 results, stats = scaling_finite_simulation(stop)  # definita in scaling_simulator.py
+
+                plot_lambda_t(stats.lambda_times, vs.SIM_TYPE, "lambda_t")
+                plot_system_avg_response_time_t(stats.system_resp_times, vs.SIM_TYPE, "system_resp_t")
+                plot_active_servers_t(stats.layer1_servers_times, vs.SIM_TYPE, "servers_t")
+
                 print(f"end scaling replication {i+1}")
                 write_file(results, file_name)
                 append_stats(replicationStats, results, stats)

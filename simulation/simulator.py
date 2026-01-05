@@ -430,7 +430,7 @@ def return_stats(stats, horizon, s):
 
 
 
-
+#EXECUTE PROVVISORIA PER CALCOLARE K (BATCH SIZE) PER BATCH MEANS
 def execute2(stats, stop):
     if return_times_P:
         tp, gid = min(return_times_P)
