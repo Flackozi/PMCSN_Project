@@ -76,7 +76,6 @@ def start_scaling_sim():
                 write_file(results, file_name)
                 append_stats(replicationStats, results, stats)
 
-            sim_type = "scaling_finite"  # se ti serve per eventuali print
 
         # SIMULAZIONE INFINITA CON SCALING
         elif vs.SIM_TYPE == INFINITE:
@@ -88,8 +87,6 @@ def start_scaling_sim():
 
             batch_stats = scaling_infinite_simulation(stop)  # definita in scaling_simulator.py
             print("End infinite SCALING simulation")
-
-            # se vuoi, qui puoi fare print delle batch statistics
 
         else:
             print("Type not valid (SIM_TYPE)")

@@ -41,3 +41,4 @@ def plot_batch(wait_times, sim_type, name):
     output_path = os.path.join(output_dir, f'{name}.png')
     plt.savefig(output_path)
     plt.close()
+

@@ -1,15 +1,10 @@
 import utils.variables as vs
-from utils.sim_utils import (
-    GetArrival,
-    Exponential,
-    get_service_A,
-    get_service_B,
-    get_service_P,
-    get_service_spike,
-    reset_arrival_temp,
-)
+import traceback
+from utils.sim_utils import*
+from utils.sim_output import *
+from libraries.rngs import *
+from utils.sim_stats import*
 from utils.variables import *
-from utils.sim_stats import SimulationStats
 import math
 from libraries.rngs import *
 
@@ -48,7 +43,7 @@ def adjust_servers_layer1(stats, lambda_current):
     num = len(servers)
     mu = BASE_MU_LAYER1      # tasso di servizio per UN server del layer 1
 
-    if num <= 0 or mu <= 0:
+    if num <= 0:
         return
 
     rho = lambda_current / (num * mu)
@@ -334,6 +329,8 @@ def scaling_infinite_simulation(stop):
     global return_times_P
     return_times_P = []
 
+    batch_stats = ReplicationStats()
+
     s = getSeed()
     reset_arrival_temp()
 
@@ -344,19 +341,42 @@ def scaling_infinite_simulation(stop):
 
     stats.t.arrival = GetArrival()
 
-    while stats.t.current < stop:
-        if stats.t.next == INFINITY:
-            print("[WARNING] No next event, breaking infinite simulation")
-            break
-        if stats.t.current == prev_time:
-            print("[WARNING] time not advancing, breaking loop")
-            break
-        prev_time = stats.t.current
-        execute(stats, stop)
+    while len(batch_stats.A_avg_wait) < vs.K:          # ciclo sui batch
+        stats.job_arrived = 0                          # reset counter arrivi batch
+        stats.index_A1 = stats.index_A2 = stats.index_A3 = 0
+        stats.index_B = stats.index_P = 0
 
-    stats.calculate_area_queue()
-    horizon = stats.t.current
-    return return_stats(stats, horizon, s), stats
+        while stats.job_arrived < vs.B:                # completamenti per batch
+            execute(stats, stop)
+
+        # Fine batch
+        stop_time = stats.t.current - start_time
+        start_time = stats.t.current
+
+        stats.calculate_area_queue()
+        # calcola metriche batch
+        comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3
+        comp_B = stats.index_B
+
+        A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
+        B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+        A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
+        B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+
+        # salva nel batch corrente
+        stats.A_wait_times.append((stats.t.current, A_wait))
+        stats.B_wait_times.append((stats.t.current, B_wait))
+        stats.A_resp_times.append((stats.t.current, A_resp))
+        stats.B_resp_times.append((stats.t.current, B_resp))
+
+        # aggiungi batch alle statistiche globali
+        append_stats(batch_stats, stats)
+
+        # reset aree e contatori del batch (non l’intera simulazione)
+        stats.reset_batch()
+
+    print("End infinite simulation (batch means)")
+    return batch_stats
 
     
 
