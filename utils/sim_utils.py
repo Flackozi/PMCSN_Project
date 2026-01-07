@@ -165,6 +165,15 @@ def GetArrivalScaling(current_time: float) -> float:
     
 
     
+def percentile_nearest_rank(values, p):
+    if not values:
+        return 0
+    v = sorted(values)
+    k = math.ceil((p / 100.0) * len(v)) - 1
+    k = max(0, min(k, len(v) - 1))
+    return v[k]
+
+
 
 # ============================================================
 #  TIME-SERIES (solo per scaling): record + plot

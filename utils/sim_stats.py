@@ -98,6 +98,8 @@ class SimulationStats:
         self.spike_server = {}
         self.index_spike = 0
         self.area_spike = Track()
+
+        self.SI_samples = []
         
     def reset(self, start_time):
         """Resettiamo tutte le variabili per una nuova simulazione"""
@@ -131,6 +133,8 @@ class SimulationStats:
         self.index_P  = 0
 
         self.next_job_id = 0
+
+        self.SI_samples.clear()
 
     def calculate_area_queue(self):
         """Calcola l'area della coda come differenza tra area nodo e area servizio"""

@@ -172,6 +172,11 @@ def execute(stats, stop):
         if job["classe"] == 1:
             # job classe 1 → B oppure SPIKE in base a SI
             # SI = numero di job nel layer 1 (qui usiamo B come layer1 aggregato)
+
+            SI = len(stats.B_jobs)
+            stats.SI_samples.append(SI)
+
+
             SI = len(stats.B_jobs)
 
             if SI < SImax:
@@ -337,6 +342,12 @@ def scaling_finite_simulation(stop):
 
     stats.calculate_area_queue()
     horizon = stats.t.current
+
+    si_p99 = percentile_nearest_rank(stats.SI_samples, 99)
+    SImax_est = si_p99 + 1   # +1 perché nel codice usi: if SI < SImax
+    print("SImax stimato (p99+1) =", SImax_est)
+
+
     return return_stats(stats, horizon, s), stats
 
 
