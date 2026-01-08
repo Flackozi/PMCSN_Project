@@ -37,7 +37,7 @@ BASE = 1
 MODEL = BASE
 
 START = 0.0
-STOP = 100000 #86400  # terminal (close the door) time
+STOP = 80000 #86400  # terminal (close the door) time
 STOP_ANALYSIS = 300000
 STOP_INFINITE = float('inf')
 
@@ -48,7 +48,7 @@ REPLICATIONS = 10
 PRINT_PLOT_BATCH = 1
 
 # --- PARAMETRI DI SCALING ---
-SImax = 10**9 #calcolato analiticamente usando la distribuzione geometrica
+SImax = 9 #calcolato analiticamente usando la distribuzione geometrica
 MIN_SERVERS = 1
 MAX_SERVERS = 2 #calcolato analiticamente 
 RHO_UP = 0.8 #rho target per scalare up

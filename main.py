@@ -57,45 +57,32 @@ def start_scaling_sim():
     """
     Avvia la simulazione con SCALING (orizzontale + spike),
     in modo analogo a start_simulation() per il modello base.
-    Usa vs.SIM_TYPE per scegliere finita o infinita.
     """
     try:
         # SIMULAZIONE FINITA CON SCALING
-        if vs.SIM_TYPE == FINITE:
-            replicationStats = ReplicationStats()
-            file_name = "scaling_model_finite_results.csv"
-            print("FINITE SCALING SIMULATION")
+        
+        replicationStats = ReplicationStats()
+        file_name = "scaling_model_finite_results.csv"
+        print("FINITE SCALING SIMULATION")
 
-            stop = STOP
-            clear_file(file_name)
+        stop = STOP
+        clear_file(file_name)
 
-            for i in range(vs.REPLICATIONS):
-                print(f"start scaling replication {i+1}")
-                results, stats = scaling_finite_simulation(stop)  # definita in scaling_simulator.py
+        for i in range(vs.REPLICATIONS):
+            print(f"start scaling replication {i+1}")
+            results, stats = scaling_finite_simulation(stop)  # definita in scaling_simulator.py
 
-                plot_lambda_t(stats.lambda_times, vs.SIM_TYPE, "lambda_t")
-                plot_system_avg_response_time_t(stats.system_resp_times, vs.SIM_TYPE, "system_resp_t")
-                plot_active_servers_t(stats.layer1_servers_times, vs.SIM_TYPE, "servers_t")
+            plot_lambda_t(stats.lambda_times, vs.SIM_TYPE, "lambda_t")
+            plot_system_avg_response_time_t(stats.system_resp_times, vs.SIM_TYPE, "system_resp_t")
+            plot_active_servers_t(stats.layer1_servers_times, vs.SIM_TYPE, "servers_t")
 
-                print(f"end scaling replication {i+1}")
-                write_file(results, file_name)
-                append_stats(replicationStats, results, stats)
+            print(f"end scaling replication {i+1}")
+            write_file(results, file_name)
+            append_stats(replicationStats, results, stats)
 
-
-        # SIMULAZIONE INFINITA CON SCALING
-        elif vs.SIM_TYPE == INFINITE:
-            file_name = "scaling_model_infinite_results.csv"
-            print("INFINITE SCALING SIMULATION")
-
-            stop = STOP_INFINITE
-            clear_file(file_name)
-
-            batch_stats = scaling_infinite_simulation(stop)  # definita in scaling_simulator.py
-            print("End infinite SCALING simulation")
-
-        else:
-            print("Type not valid (SIM_TYPE)")
-            exit(1)
+        
+       
+        exit(1)
 
     except Exception as e:
         print("Error during scaling simulation:")

@@ -55,14 +55,14 @@ def update_completion_B(jobs, current_time, m_servers: int):
  
 def adjust_servers_layer1(stats, lambda_current):
     """Aggiunge o rimuove server nel layer 1 in base a λ corrente e ai parametri RHO_UP/RHO_DOWN."""
-    servers = stats.layer1_servers
+    stats.layer1_servers
 
     # se non ci sono server accesi, accendiamo il primo
-    if not servers:
-        servers.append({"id": 0, "jobs": {}})
+    if not stats.layer1_servers:
+        stats.layer1_servers.append({"id": 0, "jobs": {}})
         return
 
-    num = len(servers)
+    num = len(stats.layer1_servers)
     mu = BASE_MU_LAYER1      # tasso di servizio per UN server del layer 1
 
     if num <= 0:
@@ -72,18 +72,17 @@ def adjust_servers_layer1(stats, lambda_current):
 
     # scala in su
     if rho > RHO_UP and num < MAX_SERVERS:
-        new_id = max(s["id"] for s in servers) + 1
-        servers.append({"id": new_id, "jobs": {}})
-        print(f"[SCALING L1] +1 server, tot={len(servers)}")
+        new_id = max(s["id"] for s in stats.layer1_servers) + 1
+        stats.layer1_servers.append({"id": new_id, "jobs": {}})
+        print(f"[SCALING L1] +1 server, tot={len(stats.layer1_servers)}")
 
     # scala in giù
     elif rho < RHO_DOWN and num > MIN_SERVERS:
-        # rimuovo solo server vuoti
-        for s in servers:
-            if not s["jobs"]:
-                servers.remove(s)
-                print(f"[SCALING L1] -1 server, tot={len(servers)}")
-                break
+    # nel modello pooled, non usiamo più s["jobs"]
+    # rimuovo un server solo se ci sono meno job che server
+        if len(stats.B_jobs) < num:
+            stats.layer1_servers.pop()
+            print(f"[SCALING L1] -1 server, tot={len(stats.layer1_servers)}")
 
 
 
@@ -130,7 +129,7 @@ def execute(stats, stop):
         for job in stats.A_jobs.values():
             job["rem"] -= delta
 
-    mB = len(stats.layer1_servers) if hasattr(stats, "layer1_servers") and stats.layer1_servers else 1 # numero di server attivi nel layer 1
+    mB = len(stats.layer1_servers) if stats.layer1_servers else 1 # numero di server attivi nel layer 1
     # --- B: aggiornamento aree e servizio (PS) ---
     if stats.B_jobs:
         nB = len(stats.B_jobs) # numero di job in B
@@ -146,7 +145,7 @@ def execute(stats, stop):
 
     # --- SPIKE: aggiornamento aree e servizio (PS) ---
     if stats.spike_server:
-        nS = len(stats.spike_server)
+        nS = len(stats.spike_server) # numero di job nello spike server
         stats.area_spike.node += dt * nS
         stats.area_spike.service += dt
         delta = dt / nS
@@ -164,15 +163,7 @@ def execute(stats, stop):
     if stats.t.current == stats.t.arrival:
         print(f"ARRIVAL | current: {stats.t.current:.4f}")
 
-        # SCALING ORIZZONTALE: aggiorno il numero di server del layer 1
-        # SCALING ORIZZONTALE: usa lambda variabile
-        lam_now = lambda_scaling(stats.t.current)
-        adjust_servers_layer1(stats, lambda_current=lam_now)
-
-        # (opzionale) salva lambda per i plot
-        if not hasattr(stats, "lambda_times"):
-            stats.lambda_times = []
-        stats.lambda_times.append((stats.t.current, lam_now))
+        
 
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -199,6 +190,16 @@ def execute(stats, stop):
         if job["classe"] == 1:
             # job classe 1 → B oppure SPIKE in base a SI
             # SI = numero di job nel layer 1 (qui usiamo B come layer1 aggregato)
+
+            # SCALING ORIZZONTALE: aggiorno il numero di server del layer 1
+            # SCALING ORIZZONTALE: usa lambda variabile
+            lam_now = lambda_scaling(stats.t.current)
+            adjust_servers_layer1(stats, lambda_current=lam_now)
+
+            # (opzionale) salva lambda per i plot
+            if not hasattr(stats, "lambda_times"):
+                stats.lambda_times = []
+            stats.lambda_times.append((stats.t.current, lam_now))
 
             SI = len(stats.B_jobs)
             stats.SI_samples.append(SI)
@@ -378,72 +379,6 @@ def scaling_finite_simulation(stop):
     return return_stats(stats, horizon, s), stats
 
 
-# =========================
-#   SIMULAZIONE INFINITA
-# =========================
-
-def scaling_infinite_simulation(stop):
-    """
-    Simulazione INFINITA con scaling dinamico.
-    
-    """
-    global return_times_P
-    return_times_P = []
-
-    batch_stats = ReplicationStats()
-
-    s = getSeed()
-    reset_arrival_temp_scaling()
-
-    stats = SimulationStats()
-    stats.reset(vs.START)
-
-    stats.layer1_servers = [{"id": 0, "jobs": {}}]
-
-    stats.t.arrival = GetArrivalScaling(stats.t.current)
-
-    start_time = stats.t.current
-
-    while len(batch_stats.A_avg_wait) < vs.K:          # ciclo sui batch
-        stats.job_arrived = 0                          # reset counter arrivi batch
-        stats.index_A1 = stats.index_A2 = stats.index_A3 = 0
-        stats.index_B = stats.index_P = 0
-
-        while stats.job_arrived < vs.B:                # completamenti per batch
-            execute(stats, stop)
-
-        # Fine batch
-        stop_time = stats.t.current - start_time
-        start_time = stats.t.current
-
-        stats.calculate_area_queue()
-        # calcola metriche batch
-        comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3
-        comp_B = stats.index_B
-
-        A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
-        B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
-        A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
-        B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
-
-        # salva nel batch corrente
-        stats.A_wait_times.append((stats.t.current, A_wait))
-        stats.B_wait_times.append((stats.t.current, B_wait))
-        stats.A_resp_times.append((stats.t.current, A_resp))
-        stats.B_resp_times.append((stats.t.current, B_resp))
-
-        # aggiungi batch alle statistiche globali
-        rep_stats = return_stats(stats, stop_time, s)
-        # scrivo le statistiche del batch su file (analogo a quanto fatto nel modello base)
-        write_file(rep_stats, "scaling_model_infinite_results.csv")
-        append_stats(batch_stats, rep_stats, stats)
-
-        
-
-    print("End infinite simulation (batch means)")
-    return batch_stats
-
-    
 
 def return_stats(stats, horizon, s):
     """Ritorna le statistiche finali della simulazione"""
