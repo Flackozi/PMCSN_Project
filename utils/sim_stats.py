@@ -4,6 +4,7 @@ class Track:
         self.node = 0.0   # ∫ N(t) dt over the horizon
         self.queue = 0.0  # = node - service (for PS, queue ≈ 0)
         self.service = 0.0  # busy time (one server): increments by dt when N>0
+        self.capacity = 0.0   # ∫ m(t) dt (server-on seconds)
 
 class Time:
     def __init__(self):
@@ -98,7 +99,7 @@ class SimulationStats:
         self.spike_server = {}
         self.index_spike = 0
         self.area_spike = Track()
-
+        self.spike_events = []  # timestamps di arrivo dei job nello spike
         self.SI_samples = []
         
     def reset(self, start_time):

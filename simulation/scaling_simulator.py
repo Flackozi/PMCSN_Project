@@ -130,6 +130,10 @@ def execute(stats, stop):
             job["rem"] -= delta
 
     mB = len(stats.layer1_servers) if stats.layer1_servers else 1 # numero di server attivi nel layer 1
+    
+    # capacità attiva (server-on seconds) anche se non ci sono job
+    stats.area_B.capacity += dt * mB
+
     # --- B: aggiornamento aree e servizio (PS) ---
     if stats.B_jobs:
         nB = len(stats.B_jobs) # numero di job in B
@@ -219,6 +223,7 @@ def execute(stats, stop):
                 jid_S = stats.next_job_id
                 stats.next_job_id += 1
                 stats.spike_server[jid_S] = {"rem": get_service_spike()}
+                stats.spike_events.append(stats.t.current)  # un job è entrato nello spike in questo istante
                 stats.index_A1 += 1
                 stats.index_spike += 1
                 stats.t.completion_spike = update_completion(
@@ -374,7 +379,7 @@ def scaling_finite_simulation(stop):
     si_p99 = percentile_nearest_rank(stats.SI_samples, 99)
     SImax_est = si_p99 + 1   
     print("SImax stimato (p99+1) =", SImax_est)
-
+    print("Arrivo job in spike server (timestamps):", stats.spike_events)
 
     return return_stats(stats, horizon, s), stats
 
@@ -391,6 +396,9 @@ def return_stats(stats, horizon, s):
     system_avg_service = (stats.area_A.service + stats.area_B.service + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
     system_avg_wait = system_avg_response - system_avg_service
 
+    B_util = (stats.area_B.service / stats.area_B.capacity) if stats.area_B.capacity > 0 else 0.0
+        
+
     return {
         "seed": s,
 
@@ -405,7 +413,8 @@ def return_stats(stats, horizon, s):
         "B_avg_resp": stats.area_B.node / comp_B if comp_B > 0 else 0.0,
         "B_avg_wait": stats.area_B.queue / comp_B if comp_B > 0 else 0.0,
         "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
-        "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
+        "B_utilization": B_util,
+        # "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
         "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
 
         # statistiche job di classe 1 su A
