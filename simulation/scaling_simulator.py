@@ -29,6 +29,28 @@ def update_completion(jobs, current_time):
         
         n = len(jobs)
         return current_time + min_remaining * n
+    
+# =========================
+# funzione per il caso multiserver in B
+# =========================
+def update_completion_B(jobs, current_time, m_servers: int):
+    """
+    Completion time per B come PS con m server (pooled).
+    - Se n <= m: ogni job usa 1 server -> delta = dt, completion = current + min_rem
+    - Se n > m: capacità totale m divisa tra n job -> completion = current + min_rem * n / m
+    """
+    if not jobs:
+        return INFINITY
+
+    n = len(jobs)
+    m = max(1, int(m_servers))
+    busy = min(m, n)  # server effettivamente occupati
+
+    min_remaining = min(job["rem"] for job in jobs.values())
+    if min_remaining < 0:
+        min_remaining = 0.0
+
+    return current_time + (min_remaining * n) / busy
 
  
 def adjust_servers_layer1(stats, lambda_current):
@@ -108,12 +130,17 @@ def execute(stats, stop):
         for job in stats.A_jobs.values():
             job["rem"] -= delta
 
+    mB = len(stats.layer1_servers) if hasattr(stats, "layer1_servers") and stats.layer1_servers else 1 # numero di server attivi nel layer 1
     # --- B: aggiornamento aree e servizio (PS) ---
     if stats.B_jobs:
-        nB = len(stats.B_jobs)
+        nB = len(stats.B_jobs) # numero di job in B
+        busy = min(mB, nB)
+
         stats.area_B.node += dt * nB
-        stats.area_B.service += dt
-        delta = dt / nB
+        stats.area_B.service += dt * busy   # NOTA: ora è "server-seconds" (può essere > dt)
+
+        # quota di servizio ricevuta da ciascun job in dt
+        delta = dt * busy / nB
         for job in stats.B_jobs.values():
             job["rem"] -= delta
 
@@ -185,7 +212,7 @@ def execute(stats, stop):
                 stats.next_job_id += 1
                 stats.B_jobs[jid_B] = {"rem": get_service_B()}
                 stats.index_A1 += 1
-                stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current)
+                stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB)
             else:
                 # layer 1 saturo → va allo SPIKE
                 jid_S = stats.next_job_id
@@ -226,7 +253,7 @@ def execute(stats, stop):
         stats.A_jobs[jid_A2] = {"classe": 2, "rem": get_service_A(2)}
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
-        stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current)
+        stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB)
 
     # --- COMPLETION IN P ---
     elif stats.t.current == stats.t.completion_P:
@@ -344,7 +371,7 @@ def scaling_finite_simulation(stop):
     horizon = stats.t.current
 
     si_p99 = percentile_nearest_rank(stats.SI_samples, 99)
-    SImax_est = si_p99 + 1   # +1 perché nel codice usi: if SI < SImax
+    SImax_est = si_p99 + 1   
     print("SImax stimato (p99+1) =", SImax_est)
 
 

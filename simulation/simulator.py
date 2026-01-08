@@ -284,13 +284,20 @@ def execute(stats, stop):
         for job in stats.A_jobs.values():
             job["rem"] -= delta
 
-    if stats.B_jobs :
-        nB = len(stats.B_jobs)
-        stats.area_B.node += dt * nB
-        stats.area_B.service += dt
-        delta = dt / nB
-        for job in stats.B_jobs.values():
-            job["rem"] -= delta
+        # --- B: aggiornamento aree e servizio (PS multiserver) ---
+        if stats.B_jobs:
+            nB = len(stats.B_jobs)
+            m = vs.B_servers  # numero di server in B (da variables.py)
+            
+            stats.area_B.node += dt * nB
+            stats.area_B.service += dt
+
+            # Ogni job riceve una frazione di servizio pari a m/nB (max 1)
+            served_fraction = min(m / nB, 1)
+            delta = dt * served_fraction
+
+            for job in stats.B_jobs.values():
+                job["rem"] -= delta
 
     stats.t.current = stats.t.next #avanziamo l'orologio
 
