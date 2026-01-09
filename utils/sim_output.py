@@ -108,3 +108,27 @@ def plot_active_servers_t(layer1_servers_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
+def plot_spike_active_t(spike_active_times, sim_type, name):
+    """
+    spike_active_times: lista di tuple (t, 0/1)
+    Salva in output/plot/{sim_type}/{name}.png
+    """
+    output_dir = f"simulation/../output/plot/{sim_type}"
+
+    if not spike_active_times:
+        spike_active_times = [(0, 0)]
+
+    x_values = [t for t, _ in spike_active_times]
+    y_values = [a for _, a in spike_active_times]
+
+    plt.figure(figsize=(10, 6))
+    plt.step(x_values, y_values, where='post')
+    plt.xlabel('Time')
+    plt.ylabel('Spike server active (0/1)')
+    plt.ylim(-0.1, 1.1)
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()

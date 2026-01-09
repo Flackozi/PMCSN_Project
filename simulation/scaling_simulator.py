@@ -1,16 +1,14 @@
 import utils.variables as vs
-import traceback
 from utils.sim_utils import*
 from utils.sim_output import *
 from libraries.rngs import *
 from utils.sim_stats import*
 from utils.variables import *
-import math
 from libraries.rngs import *
 
 plantSeeds(SEED)
 
-time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint each 1000 sec
+time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint ogni 1000 sec
 current_checkpoint = 0
 
 return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
@@ -35,7 +33,7 @@ def update_completion(jobs, current_time):
 # =========================
 def update_completion_B(jobs, current_time, m_servers: int):
     """
-    Completion time per B come PS con m server (pooled).
+    Completion time per B come PS con m server.
     - Se n <= m: ogni job usa 1 server -> delta = dt, completion = current + min_rem
     - Se n > m: capacità totale m divisa tra n job -> completion = current + min_rem * n / m
     """
@@ -78,7 +76,6 @@ def adjust_servers_layer1(stats, lambda_current):
 
     # scala in giù
     elif rho < RHO_DOWN and num > MIN_SERVERS:
-    # nel modello pooled, non usiamo più s["jobs"]
     # rimuovo un server solo se ci sono meno job che server
         if len(stats.B_jobs) < num:
             stats.layer1_servers.pop()
@@ -131,7 +128,7 @@ def execute(stats, stop):
 
     mB = len(stats.layer1_servers) if stats.layer1_servers else 1 # numero di server attivi nel layer 1
     
-    # capacità attiva (server-on seconds) anche se non ci sono job
+    
     stats.area_B.capacity += dt * mB
 
     # --- B: aggiornamento aree e servizio (PS) ---
@@ -140,7 +137,7 @@ def execute(stats, stop):
         busy = min(mB, nB)
 
         stats.area_B.node += dt * nB
-        stats.area_B.service += dt * busy   # NOTA: ora è "server-seconds" (può essere > dt)
+        stats.area_B.service += dt * busy   
 
         # quota di servizio ricevuta da ciascun job in dt
         delta = dt * busy / nB
@@ -193,14 +190,14 @@ def execute(stats, stop):
 
         if job["classe"] == 1:
             # job classe 1 → B oppure SPIKE in base a SI
-            # SI = numero di job nel layer 1 (qui usiamo B come layer1 aggregato)
+            # SI = numero di job nel layer 1 (qui usiamo B come layer1 )
 
-            # SCALING ORIZZONTALE: aggiorno il numero di server del layer 1
-            # SCALING ORIZZONTALE: usa lambda variabile
+            # SCALING ORIZZONTALE: aggiorno il numero di server del layer 1 (server B)
             lam_now = lambda_scaling(stats.t.current)
             adjust_servers_layer1(stats, lambda_current=lam_now)
+            mB_now = max(1, len(stats.layer1_servers))
 
-            # (opzionale) salva lambda per i plot
+            #salva lambda per i plot
             if not hasattr(stats, "lambda_times"):
                 stats.lambda_times = []
             stats.lambda_times.append((stats.t.current, lam_now))
@@ -208,24 +205,33 @@ def execute(stats, stop):
             SI = len(stats.B_jobs)
             stats.SI_samples.append(SI)
 
+            nB = len(stats.B_jobs)
 
-            SI = len(stats.B_jobs)
+            SI_excess_after = max(0, (nB + 1) - mB_now)
 
-            if SI < SImax:
+            if SI_excess_after < SImax:
                 # layer 1 NON saturo → va in B
                 jid_B = stats.next_job_id
                 stats.next_job_id += 1
                 stats.B_jobs[jid_B] = {"rem": get_service_B()}
                 stats.index_A1 += 1
-                stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB)
+                stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB_now)
             else:
                 # layer 1 saturo → va allo SPIKE
+
+                was_empty = (len(stats.spike_server) == 0)
+
                 jid_S = stats.next_job_id
                 stats.next_job_id += 1
                 stats.spike_server[jid_S] = {"rem": get_service_spike()}
-                stats.spike_events.append(stats.t.current)  # un job è entrato nello spike in questo istante
+                stats.spike_events.append(stats.t.current) 
                 stats.index_A1 += 1
                 stats.index_spike += 1
+
+                if was_empty:
+                    stats.spike_active_times.append((stats.t.current, 1))
+
+
                 stats.t.completion_spike = update_completion(
                     stats.spike_server, stats.t.current
                 )
@@ -258,8 +264,10 @@ def execute(stats, stop):
         stats.next_job_id += 1
         stats.A_jobs[jid_A2] = {"classe": 2, "rem": get_service_A(2)}
 
+        mB_now = max(1, len(stats.layer1_servers))
+
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
-        stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB)
+        stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB_now)
 
     # --- COMPLETION IN P ---
     elif stats.t.current == stats.t.completion_P:
@@ -280,6 +288,8 @@ def execute(stats, stop):
 
         jid, job = min(stats.spike_server.items(), key=lambda x: x[1]["rem"])
         del stats.spike_server[jid]
+        if len(stats.spike_server) == 0:
+            stats.spike_active_times.append((stats.t.current, 0))
 
         # lo tratto come B "potenziato" → dopo spike → A come classe 2
         jid_A2 = stats.next_job_id
@@ -308,7 +318,10 @@ def scaling_finite_simulation(stop):
     stats = SimulationStats()
     stats.reset(vs.START)
 
-    # opzionale: almeno un server nel layer 1
+    #per plot spike 
+    stats.spike_active_times = [(stats.t.current, 0)]
+
+    # almeno un server nel layer 1
     stats.layer1_servers = [{"id": 0, "jobs": {}}]
 
     # primo arrivo esterno
@@ -376,10 +389,11 @@ def scaling_finite_simulation(stop):
     stats.calculate_area_queue()
     horizon = stats.t.current
 
-    si_p99 = percentile_nearest_rank(stats.SI_samples, 99)
-    SImax_est = si_p99 + 1   
-    print("SImax stimato (p99+1) =", SImax_est)
-    print("Arrivo job in spike server (timestamps):", stats.spike_events)
+    # CODICE USATO PER IL CALCOLO DI SImax STIMATO
+    # si_p99 = percentile_nearest_rank(stats.SI_samples, 99)
+    # SImax_est = si_p99 + 1   
+    # print("SImax stimato (p99+1) =", SImax_est)
+    # print("Arrivo job in spike server (timestamps):", stats.spike_events)
 
     return return_stats(stats, horizon, s), stats
 

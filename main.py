@@ -76,6 +76,8 @@ def start_scaling_sim():
             plot_system_avg_response_time_t(stats.system_resp_times, vs.SIM_TYPE, "system_resp_t")
             plot_active_servers_t(stats.layer1_servers_times, vs.SIM_TYPE, "servers_t")
 
+            plot_spike_active_t(stats.spike_active_times, vs.SIM_TYPE, "spike_active_t")
+
             print(f"end scaling replication {i+1}")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
@@ -102,7 +104,6 @@ def start():
             get_simulation(choice)
             start_simulation()
         elif choice == 3:
-            get_simulation(choice)
             start_scaling_sim()
         else:
             print("Invalid choice.")

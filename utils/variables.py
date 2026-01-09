@@ -48,7 +48,7 @@ REPLICATIONS = 10
 PRINT_PLOT_BATCH = 1
 
 # --- PARAMETRI DI SCALING ---
-SImax = 9 #calcolato analiticamente usando la distribuzione geometrica
+SImax = 15 
 MIN_SERVERS = 1
 MAX_SERVERS = 2 #calcolato analiticamente 
 RHO_UP = 0.8 #rho target per scalare up
