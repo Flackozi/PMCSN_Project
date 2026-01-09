@@ -197,19 +197,20 @@ def execute(stats, stop):
             adjust_servers_layer1(stats, lambda_current=lam_now)
             mB_now = max(1, len(stats.layer1_servers))
 
+            
+            is_anomalous = lam_now > (vs.LAMBDA_NORMAL_MAX + vs.ANOM_EPS)
+            
+
             #salva lambda per i plot
             if not hasattr(stats, "lambda_times"):
                 stats.lambda_times = []
             stats.lambda_times.append((stats.t.current, lam_now))
 
-            SI = len(stats.B_jobs)
-            stats.SI_samples.append(SI)
-
             nB = len(stats.B_jobs)
 
             SI_excess_after = max(0, (nB + 1) - mB_now)
 
-            if SI_excess_after < SImax:
+            if (not is_anomalous) or SI_excess_after < SImax:
                 # layer 1 NON saturo → va in B
                 jid_B = stats.next_job_id
                 stats.next_job_id += 1

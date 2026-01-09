@@ -48,14 +48,15 @@ REPLICATIONS = 10
 PRINT_PLOT_BATCH = 1
 
 # --- PARAMETRI DI SCALING ---
-SImax = 15 
+SImax = 8 
 MIN_SERVERS = 1
 MAX_SERVERS = 2 #calcolato analiticamente 
 RHO_UP = 0.8 #rho target per scalare up
 RHO_DOWN = 0.5 #rho target per scalare down
 BASE_MU_LAYER1 = 1.25     # 1 / mean service time
 BASE_MU_SPIKE = 1.875      # spike più veloce (vertical scaling) -> 1.25 * k = 1.25 * 1.5 perche k > 1
-
+LAMBDA_NORMAL_MAX = 1.5   # dato che la sinusoide va 0.9 → 1.5
+ANOM_EPS = 0.05  # tolleranza per rilevamento anomalia
 
 def set_simulation(model, type):
     global SIM_TYPE, MODEL 
