@@ -151,6 +151,7 @@ def plot_replication_response_times(resp_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
+# Funzone per il plot dell'analisi del transitorio
 def plot_analysis(resp_times, seed, name, sim_type):
     output_dir = f"simulation/../output/plot/transient_analysis/{sim_type}"
 
