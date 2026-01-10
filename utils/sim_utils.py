@@ -77,6 +77,7 @@ def append_stats(replicationStats, results, stats):
     (cioè in return_stats) dentro replicationStats.metrics.
 
     """
+    replicationStats.seed.append(results['seed'])
     replicationStats.system_avg_wait.append(results['system_avg_wait'])
     replicationStats.system_avg_response_time.append(results['system_avg_response_time'])   
     replicationStats.system_avg_service_time.append(results['system_avg_service_time'])

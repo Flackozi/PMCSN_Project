@@ -8,7 +8,7 @@ file_path = "simulation/../output/"
 header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_avg_num_job', 'B_avg_resp',
           'B_avg_wait', 'B_avg_serv', 'B_utilization', 'B_avg_num_job', 'A1_avg_resp', 'A1_avg_wait', 'A1_avg_serv', 'A2_avg_resp',
           'A2_avg_wait', 'A2_avg_serv', 'A3_avg_resp', 'A3_avg_wait', 'A3_avg_serv', 'total_completed', 'system_avg_response_time', 
-          'system_avg_service_time', 'system_utilization', 'system_avg_wait', 'job_arrived', 'completions_A1', 'completions_A2',
+          'system_avg_service_time', 'system_utilization', 'system_avg_wait', 'system_throughput', 'job_arrived', 'completions_A1', 'completions_A2',
           'completions_A3', 'completions_B', 'completions_P', 'horizon']
 
 def write_file(results, file_name):
@@ -108,6 +108,7 @@ def plot_active_servers_t(layer1_servers_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
+
 def plot_spike_active_t(spike_active_times, sim_type, name):
     """
     spike_active_times: lista di tuple (t, 0/1)
@@ -126,6 +127,44 @@ def plot_spike_active_t(spike_active_times, sim_type, name):
     plt.xlabel('Time')
     plt.ylabel('Spike server active (0/1)')
     plt.ylim(-0.1, 1.1)
+
+# Funzione che plotta i tempi di risposta in funzione del tempo (una serie per ogni replica)
+def plot_replication_response_times(resp_times, sim_type, name):
+    output_dir = f"simulation/../output/plot/{sim_type}"
+
+    # resp_times è una lista di repliche, ogni replica è una lista di tuple (time, avg_resp_time)
+    plt.figure(figsize=(10, 6))
+    
+    # Plotta la serie temporale di ogni replica
+    for replica_index, replica_series in enumerate(resp_times):
+        if replica_series:
+            times = [point[0] for point in replica_series]
+            resp_values = [point[1] for point in replica_series]
+            plt.plot(times, resp_values, alpha=0.7)
+    
+    plt.xlabel('Time (s)')
+    plt.ylabel('Response time (s)')
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+
+def plot_analysis(resp_times, seed, name, sim_type):
+    output_dir = f"simulation/../output/plot/transient_analysis/{sim_type}"
+
+    plt.figure(figsize=(10, 6))
+
+    # Plot each run
+    for run_index, response_times in enumerate(resp_times):
+        times = [point[0] for point in response_times]
+        avg_response_times = [point[1] for point in response_times]
+        plt.plot(times, avg_response_times, label=f'Seed {seed[run_index]}')
+
+    plt.xlabel('Time (s)')
+    plt.ylabel('Resp time (s)')
+    plt.legend()
     plt.grid(True)
 
     os.makedirs(output_dir, exist_ok=True)

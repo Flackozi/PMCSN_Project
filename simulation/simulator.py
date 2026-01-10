@@ -13,9 +13,13 @@ current_checkpoint = 0
 
 return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
 
-def finite_simulation(stop):
+def finite_simulation(stop, seed):
     global current_checkpoint
     current_checkpoint = 0
+
+    # Genera un nuovo seed per questa replica
+    plantSeeds(seed)  # Pianta il seed PRIMA di iniziare
+
     s = getSeed()
     reset_arrival_temp()
 
@@ -62,28 +66,6 @@ def finite_simulation(stop):
             stats.A1_resp_times.append((stats.t.current, A1_resp))
             stats.A2_resp_times.append((stats.t.current, A2_resp))
             stats.A3_resp_times.append((stats.t.current, A3_resp))
-
-
-            # --- istantanee di utilizzo e numero medio fino a ora (transiente cumulato) ---
-            # horizon = max(stats.t.current, 1e-12)
-            # A_util = stats.area_A.service / horizon
-            # B_util = stats.area_B.service / horizon
-            # A_N    = stats.area_A.node    / horizon
-            # B_N    = stats.area_B.node    / horizon
-
-            # # --- salva punti (t, valore) ---
-            # tchk = stats.t.current
-            # stats.A_wait_times.append((tchk, A_wait))
-            # stats.B_wait_times.append((tchk, B_wait))
-            # stats.P_service_times.append((tchk, P_serv))
-
-            # stats.A_sys_times.append((tchk, A_sys))
-            # stats.B_sys_times.append((tchk, B_sys))
-
-            # stats.A_util_times.append((tchk, A_util))
-            # stats.B_util_times.append((tchk, B_util))
-            # stats.A_N_times.append((tchk, A_N))
-            # stats.B_N_times.append((tchk, B_N))
 
             current_checkpoint += 1
             
@@ -284,20 +266,14 @@ def execute(stats, stop):
         for job in stats.A_jobs.values():
             job["rem"] -= delta
 
-        # --- B: aggiornamento aree e servizio (PS multiserver) ---
-        if stats.B_jobs:
-            nB = len(stats.B_jobs)
-            m = vs.B_servers  # numero di server in B (da variables.py)
-            
-            stats.area_B.node += dt * nB
-            stats.area_B.service += dt
-
-            # Ogni job riceve una frazione di servizio pari a m/nB (max 1)
-            served_fraction = min(m / nB, 1)
-            delta = dt * served_fraction
-
-            for job in stats.B_jobs.values():
-                job["rem"] -= delta
+    # --- B: aggiornamento aree e servizio (PS multiserver) ---
+    if stats.B_jobs:
+        nB = len(stats.B_jobs)            
+        stats.area_B.node += dt * nB
+        stats.area_B.service += dt
+        delta = dt / nB
+        for job in stats.B_jobs.values():
+            job["rem"] -= delta
 
     stats.t.current = stats.t.next #avanziamo l'orologio
 
@@ -422,6 +398,7 @@ def return_stats(stats, horizon, s):
         'system_avg_service_time': system_avg_service,
         'system_utilization': (stats.area_A.service + stats.area_B.service + stats.area_P.service) / horizon if horizon > 0 else 0.0,
         'system_avg_wait': system_avg_wait,
+        'system_throughput': stats.index_A3 / horizon if horizon > 0 else 0.0,
 
         "job_arrived": stats.job_arrived,
         "completions_A1": stats.index_A1,
