@@ -5,6 +5,7 @@ from utils.sim_stats import *
 from simulation.simulator import *
 import traceback
 from simulation.scaling_simulator import * 
+import simulation.simulator_base_variabile as sbv 
 
 def start_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -74,6 +75,36 @@ def start_infinite_sim():
     # type = "batch"
     # # print_simulation_stats(batch_stats, type, type)
 
+def start_base_variabile_sim():
+    """
+    Avvia la simulazione con arrivi a lambda variabile,
+    in modo analogo a start_simulation() per il modello base.
+    """
+    try:
+        replicationStats = ReplicationStats()
+        file_name = "base_variabile_model_finite_results.csv"
+        print("FINITE BASE VARIABILE SIMULATION")
+
+        stop = STOP
+        clear_file(file_name)
+
+        for i in range(vs.REPLICATIONS):
+            print(f"start base variabile replication {i+1}")
+            seed = SEED + i
+            results, stats = sbv.finite_simulation(stop, seed)  # definita in simulator_base_variabile.py
+
+            print(f"end base variabile replication {i+1}")
+            write_file(results, file_name)
+            append_stats(replicationStats, results, stats)
+
+        
+       
+        exit(1)
+
+    except Exception as e:
+        print("Error during base variabile simulation:")
+        traceback.print_exc()
+
 def start_scaling_sim():
     """
     Avvia la simulazione con SCALING (orizzontale + spike),
@@ -116,6 +147,7 @@ def start():
     print("1. Base model simulation")
     print("2. Base model + 2FA simulation")
     print("3. Scaling model simulation")
+    print("4. Base model + variable lambda simulation")
     try:
         choice = int(input("Select the type: "))
         if choice == 1:
@@ -126,6 +158,8 @@ def start():
             start_simulation()
         elif choice == 3:
             start_scaling_sim()
+        elif choice == 4:
+            start_base_variabile_sim()
         else:
             print("Invalid choice.")
     except ValueError as e:
