@@ -396,7 +396,7 @@ def return_stats(stats, horizon, s):
         'total_completed': stats.index_A3,
         'system_avg_response_time': system_avg_response,
         'system_avg_service_time': system_avg_service,
-        'system_utilization': (stats.area_A.service + stats.area_B.service + stats.area_P.service) / horizon if horizon > 0 else 0.0,
+        'system_utilization': max (stats.area_A.service/ horizon, stats.area_B.service / horizon,stats.area_P.service/ horizon)  if horizon > 0 else 0.0, # utilizzo del centro che rappresenta il bottleneck
         'system_avg_wait': system_avg_wait,
         'system_throughput': stats.index_A3 / horizon if horizon > 0 else 0.0,
 
