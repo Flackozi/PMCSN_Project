@@ -37,6 +37,7 @@ class SimulationStats:
         self.index_P  = 0
 
 
+
         # populations (node-level)
         self.number_A  = 0  # = len(A_jobs)
         self.number_B  = 0  # = len(B_jobs)
