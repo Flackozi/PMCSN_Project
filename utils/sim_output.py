@@ -34,7 +34,7 @@ def plot_batch(wait_times, sim_type, name):
     plt.figure(figsize=(10, 6))
     plt.plot(x_values, y_values, linestyle='-', color='b')
     plt.xlabel('Batch')
-    plt.ylabel('Wait time')
+    plt.ylabel('Response time')
     plt.grid(True)
 
     os.makedirs(output_dir, exist_ok=True)

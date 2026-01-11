@@ -37,13 +37,13 @@ BASE = 1
 MODEL = BASE
 
 START = 0.0
-STOP = 80000 #86400  # terminal (close the door) time
+STOP = 100000 #86400  # terminal (close the door) time
 STOP_ANALYSIS = 300000
 STOP_INFINITE = float('inf')
 
 SEED = 123456789
 
-REPLICATIONS = 10
+REPLICATIONS = 50
 
 TRANSIENT_ANALYSIS = 0  # 1 per fare l'analisi del transitorio, 0 per simulazioni finite/infinite normali
 

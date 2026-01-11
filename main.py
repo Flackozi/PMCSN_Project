@@ -26,6 +26,7 @@ def start_finite_sim():
     if vs.TRANSIENT_ANALYSIS == 1:
         stop = STOP_ANALYSIS
         vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
+        file_name = "base_model_transient_analysis_results.csv"
     else:
         stop = STOP
         vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
@@ -60,6 +61,7 @@ def start_finite_sim():
         plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
         plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
         plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
 def start_infinite_sim():
     # replicationStats = ReplicationStats()
     if vs.MODEL == BASE:
