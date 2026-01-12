@@ -123,7 +123,7 @@ def append_stats(replicationStats, results, stats):
 
 def lambda_scaling(t: float) -> float:
     """
-    Lambda variabile SOLO per scaling:
+    Lambda variabile:
     sinusoide attorno a vs.LAMBDA.
     """
     base = vs.LAMBDA + vs.LAMBDA_SIN_AMP * math.sin(2 * math.pi * t / vs.LAMBDA_PERIOD)
