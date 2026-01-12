@@ -130,7 +130,7 @@ def plot_spike_active_t(spike_active_times, sim_type, name):
 
 # Funzione che plotta i tempi di risposta in funzione del tempo (una serie per ogni replica)
 def plot_replication_response_times(resp_times, sim_type, name):
-    output_dir = f"simulation/../output/plot/{sim_type}"
+    output_dir = f"simulation/../output/plot/finite_simulation/{sim_type}"
 
     # resp_times è una lista di repliche, ogni replica è una lista di tuple (time, avg_resp_time)
     plt.figure(figsize=(10, 6))

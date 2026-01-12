@@ -6,6 +6,7 @@ from simulation.simulator import *
 import traceback
 from simulation.scaling_simulator import * 
 import simulation.simulator_base_variabile as sbv 
+from simulation.double_factor_simulation import *
 
 def start_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -84,7 +85,13 @@ def start_base_variabile_sim():
         file_name = "base_variabile_model_finite_results.csv"
         print("FINITE BASE VARIABILE SIMULATION")
 
-        stop = STOP
+        if vs.TRANSIENT_ANALYSIS == 1:
+            stop = STOP_ANALYSIS
+            vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
+        else:
+            stop = STOP
+            vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
+
         clear_file(file_name)
 
         for i in range(vs.REPLICATIONS):
@@ -95,6 +102,22 @@ def start_base_variabile_sim():
             print(f"end base variabile replication {i+1}")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            # analisi del transitorio
+            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", "variable_lambda")
+            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", "variable_lambda")
+            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", "variable_lambda")
+            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", "variable_lambda")
+            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", "variable_lambda")
+        else:
+            sim_type = "finite_simulation"
+            # plot dei tempi di risposta medi per replica
+            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
 
         
        
@@ -129,7 +152,8 @@ def start_scaling_sim():
 
         for i in range(vs.REPLICATIONS):
             print(f"start scaling replication {i+1}")
-            results, stats = scaling_finite_simulation(stop)  # definita in scaling_simulator.py
+            seed = SEED + i
+            results, stats = scaling_finite_simulation(stop, seed)  # definita in scaling_simulator.py
 
             plot_lambda_t(stats.lambda_times, vs.SIM_TYPE, "lambda_t")
             plot_system_avg_response_time_t(stats.system_resp_times, vs.SIM_TYPE, "system_resp_t")
@@ -167,6 +191,29 @@ def start_scaling_sim():
         traceback.print_exc()
 
 
+def start_2fa_simulation():
+    replicationStats = ReplicationStats()
+    file_name = "2fa_model_finite_results.csv"
+    print("FINITE 2FA BASE SIMULATION")
+
+    stop = STOP
+
+    clear_file(file_name)
+    for i in range(vs.REPLICATIONS):
+
+        print(f"start 2fa replication {i+1}")
+        seed = SEED + i
+        results, stats = finite_2fa_simulation(stop, seed)
+        print(f"end {i+1} replication")
+        write_file(results, file_name)
+        append_stats(replicationStats, results, stats)
+        # type = "replications"
+        # sim_type = "standard"
+        # print_simulation_stats(replicationStats, type, sim_type)
+
+    exit(1)
+
+
 def start():
     print("1. Base model simulation")
     print("2. Base model + 2FA simulation")
@@ -179,7 +226,7 @@ def start():
             start_simulation()
         elif choice == 2:
             get_simulation(choice)
-            start_simulation()
+            start_2fa_simulation()
         elif choice == 3:
             start_scaling_sim()
         elif choice == 4:

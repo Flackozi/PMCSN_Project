@@ -71,6 +71,23 @@ def get_service_P():
     selectStream(3)
     return 0.4
 
+
+def get_service_A_2FA(classe):
+    if classe == 1:
+        selectStream(1)
+        return 0.2
+    elif classe == 2:
+        selectStream(2)
+        return 0.4
+    else: 
+        selectStream(6)
+        return 0.15
+
+def get_service_P_2FA():
+    selectStream(5)
+    return 0.7  
+
+
 def append_stats(replicationStats, results, stats):
     """
     Salva, per una replica, tutti i valori contenuti in `results`
