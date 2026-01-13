@@ -10,7 +10,7 @@ import simulation.simulator as sim
 
 
 
-def finite_2fa_simulation(stop, seed):
+def finite_2fa_simulation(stop):
     """
     Runs a finite simulation with Two-Factor Authentication enabled.
     """
@@ -22,7 +22,7 @@ def finite_2fa_simulation(stop, seed):
     sim.get_service_A = sim.get_service_A_2FA
 
     # Avvio simulazione
-    results, stats = finite_simulation(stop, seed)
+    results, stats = finite_simulation(stop)
 
     # Ripristino comportamento originale
     sim.get_service_P = get_service_P

@@ -13,12 +13,9 @@ current_checkpoint = 0
 
 return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
 
-def finite_simulation(stop, seed):
+def finite_simulation(stop):
     global current_checkpoint
     current_checkpoint = 0
-
-    # Genera un nuovo seed per questa replica
-    plantSeeds(seed)  # Pianta il seed PRIMA di iniziare
 
     s = getSeed()
     reset_arrival_temp_scaling()

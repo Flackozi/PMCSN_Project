@@ -12,6 +12,7 @@ header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_
           'completions_A3', 'completions_B', 'completions_P', 'horizon']
 
 def write_file(results, file_name):
+    file_path = "simulation/../output/csv/"
     path = file_path + file_name
     with open(path, "a", newline = '', encoding='utf-8') as csvfile:
         write = csv.DictWriter(csvfile, fieldnames=header)
@@ -24,7 +25,7 @@ def clear_file(file_name):
         write.writeheader()
 
 def plot_batch(wait_times, sim_type, name):
-    output_dir = f"simulation/../output/plot/batch/{sim_type}"
+    output_dir = f"simulation/../output/plot/infinite_simulation/{sim_type}"
 
     x_values = [index for index in range(len(wait_times)+1)]
     y_values = [0]
@@ -166,6 +167,31 @@ def plot_analysis(resp_times, seed, name, sim_type):
     plt.xlabel('Time (s)')
     plt.ylabel('Resp time (s)')
     plt.legend()
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_num_jobs_t(num_jobs_times, sim_type, name, ylabel="Number of jobs"):
+    """
+    num_jobs_times: lista di tuple (t, N)
+    Salva in output/plot/{sim_type}/{name}.png
+    """
+    output_dir = f"simulation/../output/plot/finite_simulation/{sim_type}"
+
+    if not num_jobs_times:
+        return
+
+    x_values = [t for t, _ in num_jobs_times]
+    y_values = [n for _, n in num_jobs_times]
+
+    plt.figure(figsize=(10, 6))
+    plt.step(x_values, y_values, where='post')
+    plt.xlabel('Time')
+    plt.ylabel(ylabel)
     plt.grid(True)
 
     os.makedirs(output_dir, exist_ok=True)

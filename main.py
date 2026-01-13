@@ -7,6 +7,7 @@ import traceback
 from simulation.scaling_simulator import * 
 import simulation.simulator_base_variabile as sbv 
 from simulation.double_factor_simulation import *
+from simulation.hyperexponential_simulator import *
 
 def start_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -28,21 +29,28 @@ def start_finite_sim():
         stop = STOP_ANALYSIS
         vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
         file_name = "base_model_transient_analysis_results.csv"
+        print("TRANSIENT BASE SIMULATION")
     else:
         stop = STOP
         vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
         file_name = "base_model_finite_results.csv"
+        print("FINITE BASE SIMULATION")
 
     clear_file(file_name)
     for i in range(vs.REPLICATIONS):
         if vs.MODEL == BASE:
             print(f"start {i+1} replication")
-            seed = SEED + i
-            results, stats = finite_simulation(stop, seed)
+            results, stats = finite_simulation(stop)
             print(f"end {i+1} replication")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
+    
     sim_type = "base_model"
+    plot_num_jobs_t(stats.Nsys_times, sim_type, f"Nsys_rep{i+1}", ylabel="N system")
+    plot_num_jobs_t(stats.NA_times,   sim_type, f"NA_rep{i+1}",   ylabel="N A")
+    plot_num_jobs_t(stats.NB_times,   sim_type, f"NB_rep{i+1}",   ylabel="N B")
+    plot_num_jobs_t(stats.NP_times,   sim_type, f"NP_rep{i+1}",   ylabel="N P")
+
 
     if vs.TRANSIENT_ANALYSIS == 1:
         # analisi del transitorio
@@ -96,8 +104,7 @@ def start_base_variabile_sim():
 
         for i in range(vs.REPLICATIONS):
             print(f"start base variabile replication {i+1}")
-            seed = SEED + i
-            results, stats = sbv.finite_simulation(stop, seed)  # definita in simulator_base_variabile.py
+            results, stats = sbv.finite_simulation(stop)  # definita in simulator_base_variabile.py
 
             print(f"end base variabile replication {i+1}")
             write_file(results, file_name)
@@ -147,25 +154,22 @@ def start_scaling_sim():
 
         print("FINITE SCALING SIMULATION")
 
-        stop = STOP
+        
         clear_file(file_name)
 
         for i in range(vs.REPLICATIONS):
             print(f"start scaling replication {i+1}")
-            seed = SEED + i
-            results, stats = scaling_finite_simulation(stop, seed)  # definita in scaling_simulator.py
-
-            plot_lambda_t(stats.lambda_times, vs.SIM_TYPE, "lambda_t")
-            plot_system_avg_response_time_t(stats.system_resp_times, vs.SIM_TYPE, "system_resp_t")
-            plot_active_servers_t(stats.layer1_servers_times, vs.SIM_TYPE, "servers_t")
-
-            plot_spike_active_t(stats.spike_active_times, vs.SIM_TYPE, "spike_active_t")
+            results, stats = scaling_finite_simulation(stop)  # definita in scaling_simulator.py
 
             print(f"end scaling replication {i+1}")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
 
         sim_type = "scaling_model"
+        plot_lambda_t(stats.lambda_times, sim_type, "lambda_t")
+        plot_system_avg_response_time_t(stats.system_resp_times, sim_type, "system_resp_t")
+        plot_active_servers_t(stats.layer1_servers_times, sim_type, "servers_t")
+        plot_spike_active_t(stats.spike_active_times, sim_type, "spike_active_t")
 
         if vs.TRANSIENT_ANALYSIS == 1:
             # analisi del transitorio
@@ -208,8 +212,7 @@ def start_2fa_simulation():
     for i in range(vs.REPLICATIONS):
 
         print(f"start 2fa replication {i+1}")
-        seed = SEED + i
-        results, stats = finite_2fa_simulation(stop, seed)
+        results, stats = finite_2fa_simulation(stop)
         print(f"end {i+1} replication")
         write_file(results, file_name)
         append_stats(replicationStats, results, stats)
@@ -234,12 +237,58 @@ def start_2fa_simulation():
 
     exit(1)
 
+def start_hyperexponential_simulation():
+    replicationStats = ReplicationStats()
+    print("FINITE HYPEREXPONENTIAL BASE SIMULATION")
+
+    if vs.TRANSIENT_ANALYSIS == 1:
+        stop = STOP_ANALYSIS
+        vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
+        file_name = "hyperexponential_model_transient_analysis_results.csv"
+    else:
+        stop = STOP
+        vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
+        file_name = "hyperexponential_model_finite_results.csv"
+
+    clear_file(file_name)
+    for i in range(vs.REPLICATIONS):
+        if vs.MODEL == BASE:
+            print(f"start {i+1} replication")
+            results, stats = hyper_finite_simulation(stop)
+            print(f"end {i+1} replication")
+            write_file(results, file_name)
+            append_stats(replicationStats, results, stats)
+
+    sim_type = "hyperexponential_model"
+
+    plot_num_jobs_t(stats.Nsys_times, sim_type, f"Nsys_rep{i+1}", ylabel="N system")
+    plot_num_jobs_t(stats.NA_times,   sim_type, f"NA_rep{i+1}",   ylabel="N A")
+    plot_num_jobs_t(stats.NB_times,   sim_type, f"NB_rep{i+1}",   ylabel="N B")
+    plot_num_jobs_t(stats.NP_times,   sim_type, f"NP_rep{i+1}",   ylabel="N P")
+
+    if vs.TRANSIENT_ANALYSIS == 1:
+        # analisi del transitorio
+        plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+        plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+        plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+        plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+        plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+    else:
+        
+        # plot dei tempi di risposta medi per replica
+        plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+        plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+        plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+        plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+        plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
 
 def start():
     print("1. Base model simulation")
     print("2. Base model + 2FA simulation")
     print("3. Scaling model simulation")
     print("4. Base model + variable lambda simulation")
+    print("5. Base model + hyperexponential distribution")
     try:
         choice = int(input("Select the type: "))
         if choice == 1:
@@ -252,6 +301,9 @@ def start():
             start_scaling_sim()
         elif choice == 4:
             start_base_variabile_sim()
+        elif choice == 5:
+            get_simulation(choice)
+            start_hyperexponential_simulation()
         else:
             print("Invalid choice.")
     except ValueError as e:

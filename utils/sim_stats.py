@@ -102,6 +102,13 @@ class SimulationStats:
         self.area_spike = Track()
         self.spike_events = []  # timestamps di arrivo dei job nello spike
         self.SI_samples = []
+
+        # --- Time series popolazione (per plot variabilità) ---
+        self.NA_times = []      # (t, N_A)
+        self.NB_times = []      # (t, N_B)
+        self.NP_times = []      # (t, N_P)  = len(return_times_P)
+        self.Nsys_times = []    # (t, N_system)
+
         
     def reset(self, start_time):
         """Resettiamo tutte le variabili per una nuova simulazione"""

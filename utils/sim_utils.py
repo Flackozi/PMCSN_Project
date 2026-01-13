@@ -52,40 +52,56 @@ def GetArrival():
 def get_service_A(classe):
     if classe == 1:
         selectStream(1)
-        return 0.2
+        return Exponential(0.2)
     elif classe == 2:
         selectStream(2)
-        return 0.4
+        return Exponential(0.4)
     else: 
         selectStream(3)
-        return 0.1
+        return Exponential(0.1)
 
 def get_service_spike():
     return Exponential(1 / vs.BASE_MU_SPIKE)
 
 def get_service_B():
-    selectStream(2)
-    return 0.8
+    selectStream(4)
+    return Exponential(0.8)
 
 def get_service_P():
-    selectStream(3)
-    return 0.4
-
+    selectStream(5)
+    return Exponential(0.4)
 
 def get_service_A_2FA(classe):
     if classe == 1:
         selectStream(1)
-        return 0.2
+        return Exponential(0.2)
     elif classe == 2:
         selectStream(2)
-        return 0.4
+        return Exponential(0.4)
     else: 
-        selectStream(6)
-        return 0.15
+        selectStream(3)
+        return Exponential(0.15)  # servizio più veloce per 2FA
 
 def get_service_P_2FA():
     selectStream(5)
-    return 0.7  
+    return Exponential(0.7)  
+
+def HyperExponential(m):
+    """Generate a Hyper-Exponential random variate, use m > 0.0."""
+    selectStream(0)
+    p = 0.4  # probabilità di scegliere la prima fase
+    u = random()
+    if u < p:
+        return - (m/0.8) * log(1.0 - random())  # prima fase con media m/(0.4*2)
+    else:
+        return - (m/1.2) * log(1.0 - random())  # seconda fase con media m/(0.6*2)
+
+def GetHyperArrival():
+    """Generate the next arrival time for the first server with Hyper-Exponential."""
+    global arrivalTemp
+    selectStream(6)
+    arrivalTemp += HyperExponential(1 / vs.LAMBDA)
+    return arrivalTemp
 
 
 def append_stats(replicationStats, results, stats):
@@ -160,7 +176,7 @@ def GetArrivalScaling(current_time: float) -> float:
     poi genero il prossimo inter-arrivo come Exp(mean = 1/lambda).
     """
     global arrivalTempScaling
-    selectStream(4)
+    selectStream(0)
 
     lam = lambda_scaling(current_time)
     inter = Exponential(1.0 / lam)       # Exponential prende la MEDIA

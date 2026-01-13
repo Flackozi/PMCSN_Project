@@ -12,9 +12,7 @@ current_checkpoint = 0
 
 return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
 
-
-
-def finite_simulation(stop):
+def hyper_finite_simulation(stop):
     global current_checkpoint, return_times_P
     current_checkpoint = 0
     return_times_P = [] 
@@ -25,7 +23,7 @@ def finite_simulation(stop):
     stats.reset(vs.START)
 
     # schedule first external arrival
-    stats.t.arrival = GetArrival()
+    stats.t.arrival = GetHyperArrival()
 
     record_num_jobs(stats)   # campione iniziale (t=START)
 
@@ -75,102 +73,6 @@ def finite_simulation(stop):
     # horizon = stats.t.current (last time)
     return return_stats(stats, stats.t.current, s), stats
 
-def infinite_simulation(stop): 
-
-    s = getSeed()
-    start_time = 0
-
-    batch_stats = ReplicationStats()
-    stats = SimulationStats()
-    stats.reset(START) 
-
-    reset_arrival_temp()         # azzera la variabile globale arrivalTemp
-    stats.reset(START)           # azzera lo stato della simulazione
-    stats.t.arrival = GetArrival()   # primo arrivo esterno FINITO, non +inf
-
-    while len(batch_stats.A_avg_wait) < K:
-        
-        while stats.job_arrived < B:
-            execute(stats, stop)
-            
-
-        stop_time = stats.t.current - start_time
-        start_time = stats.t.current
-
-        stats.calculate_area_queue()
-
-        _check_areas_finite(stats, "infinite_simulation: dopo calculate_area_queue")
-
-
-        # snapshot
-        comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
-        comp_B = stats.index_B
-        comp_P = stats.index_P
-
-        # medie di attesa e di permanenza (cumulative fino al checkpoint)
-        A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
-        B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
-        # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
-        # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
-        
-        # tempo di risposta del centro = area.node / completamenti
-        A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
-        B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
-
-        A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
-        A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
-        A3_wait = (stats.area_A3.node - stats.area_A3.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
-        
-        A1_resp = (stats.area_A1.node / stats.index_A1) if stats.index_A1 > 0 else 0.0
-        A2_resp = (stats.area_A2.node / stats.index_A2) if stats.index_A2 > 0 else 0.0
-        A3_resp = (stats.area_A3.node / stats.index_A3) if stats.index_A3 > 0 else 0.0
-
-        stats.A_wait_times.append((stats.t.current, A_wait))
-        stats.B_wait_times.append((stats.t.current, B_wait))
-        stats.A1_wait_times.append((stats.t.current, A1_wait))
-        stats.A2_wait_times.append((stats.t.current, A2_wait))
-        stats.A3_wait_times.append((stats.t.current, A3_wait))
-
-        stats.A_resp_times.append((stats.t.current, A_resp))
-        stats.B_resp_times.append((stats.t.current, B_resp))
-        stats.A1_resp_times.append((stats.t.current, A1_resp))
-        stats.A2_resp_times.append((stats.t.current, A2_resp))
-        stats.A3_resp_times.append((stats.t.current, A3_resp))
-
-
-        # collect replication statistics
-        rep_stats = return_stats(stats, stop_time, s)
-        write_file(rep_stats, "base_model_infinite_results.csv")
-        append_stats(batch_stats, rep_stats, stats)
-
-
-        # reset stats for next replication
-        stats.reset_infinite()
-
-    if PRINT_PLOT_BATCH == 1:
-        sim_type = "base_model_infinite"
-        plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
-        plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
-        plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
-        plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
-        plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
-        plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
-
-    remove_batch(batch_stats, 25)
-    return batch_stats
-
-    
-def _check_areas_finite(stats, where):
-    if not math.isfinite(getattr(stats.area_A, "node", float("nan"))):
-        print(f"[ERROR] area_A.node non finito in: {where}")
-        print(f"  t.current={getattr(stats.t,'current',None)}, t.next={getattr(stats.t,'next',None)}, dt={(getattr(stats.t,'next',0)-getattr(stats.t,'current',0))}")
-        print(f"  arrival={stats.t.arrival}, compA={stats.t.completion_A}, compB={stats.t.completion_B}, compP={stats.t.completion_P}")
-        print(f"  return_times_P={return_times_P}")
-        print(f"  nA={len(stats.A_jobs)}, A_jobs keys={list(stats.A_jobs.keys())}")
-        print(f"  area_A before/after: node={getattr(stats.area_A,'node',None)}, service={getattr(stats.area_A,'service',None)}")
-        traceback.print_stack()
-        raise RuntimeError("area_A.node non finito")
-
 
 def update_completion(jobs, current_time):
     if not jobs:
@@ -185,6 +87,7 @@ def update_completion(jobs, current_time):
         
         n = len(jobs)
         return current_time + min_remaining * n
+
 
 def record_num_jobs(stats):
     # popolazioni istantanee
@@ -259,7 +162,7 @@ def execute(stats, stop):
         stats.job_times[jid] = {"arrival": stats.t.current, "departure": None}  # salvo il tempo di arrivo del job
         
 
-        stats.t.arrival = GetArrival()
+        stats.t.arrival = GetHyperArrival()
         if stats.t.arrival > stop:
             stats.t.last = stats.t.current
             stats.t.arrival = INFINITY
@@ -322,6 +225,7 @@ def execute(stats, stop):
     # registra popolazioni dopo aver aggiornato lo stato dell'evento
     record_num_jobs(stats)
 
+        
 def return_stats(stats, horizon, s):
     """Ritorna le statistiche finali della simulazione"""
     # medie finali
