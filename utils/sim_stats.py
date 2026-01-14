@@ -205,7 +205,8 @@ class ReplicationStats:
         self.system_avg_wait = []         # System average waiting time
         self.system_avg_response_time = []# System average response time                 
         self.system_avg_service_time = [] # Total service time (sum of all centers)
-        self.system_utilization = []      # (Optional) overall utilization
+        self.system_utilization = []      # overall utilization
+        self.system_avg_num_job = []      # Avg number of jobs in system
 
         # --- Node A (aggregated across all visits) ---
         self.A_avg_wait = []           # Average waiting time at A

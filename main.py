@@ -44,13 +44,8 @@ def start_finite_sim():
             print(f"end {i+1} replication")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
-    
-    sim_type = "base_model"
-    plot_num_jobs_t(stats.Nsys_times, sim_type, f"Nsys_rep{i+1}", ylabel="N system")
-    plot_num_jobs_t(stats.NA_times,   sim_type, f"NA_rep{i+1}",   ylabel="N A")
-    plot_num_jobs_t(stats.NB_times,   sim_type, f"NB_rep{i+1}",   ylabel="N B")
-    plot_num_jobs_t(stats.NP_times,   sim_type, f"NP_rep{i+1}",   ylabel="N P")
 
+    sim_type = "base_model"
 
     if vs.TRANSIENT_ANALYSIS == 1:
         # analisi del transitorio
@@ -67,6 +62,12 @@ def start_finite_sim():
         plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
         plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
         plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
+        sim_type = "finite_simulation/base_model"
+        plot_num_jobs_t(stats.Nsys_times, sim_type, f"Nsys", ylabel="N system")
+        plot_num_jobs_t(stats.NA_times,   sim_type, f"NA",   ylabel="N A")
+        plot_num_jobs_t(stats.NB_times,   sim_type, f"NB",   ylabel="N B")
+        plot_num_jobs_t(stats.NP_times,   sim_type, f"NP",   ylabel="N P")
 
 def start_infinite_sim():
     # replicationStats = ReplicationStats()
@@ -238,49 +239,58 @@ def start_2fa_simulation():
     exit(1)
 
 def start_hyperexponential_simulation():
-    replicationStats = ReplicationStats()
-    print("FINITE HYPEREXPONENTIAL BASE SIMULATION")
+    if vs.SIM_TYPE == INFINITE:
+        file_name = "hyper_model_infinite_results.csv"
+        print("INFINITE HYPEREXPONENTIAL SIMULATION")
 
-    if vs.TRANSIENT_ANALYSIS == 1:
-        stop = STOP_ANALYSIS
-        vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
-        file_name = "hyperexponential_model_transient_analysis_results.csv"
+        clear_file(file_name)
+        hyper_infinite_simulation(STOP_INFINITE)
+        print("End infinite hyperexponential simulation")
     else:
-        stop = STOP
-        vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
-        file_name = "hyperexponential_model_finite_results.csv"
-
-    clear_file(file_name)
-    for i in range(vs.REPLICATIONS):
-        if vs.MODEL == BASE:
-            print(f"start {i+1} replication")
-            results, stats = hyper_finite_simulation(stop)
-            print(f"end {i+1} replication")
-            write_file(results, file_name)
-            append_stats(replicationStats, results, stats)
-
-    sim_type = "hyperexponential_model"
-
-    plot_num_jobs_t(stats.Nsys_times, sim_type, f"Nsys_rep{i+1}", ylabel="N system")
-    plot_num_jobs_t(stats.NA_times,   sim_type, f"NA_rep{i+1}",   ylabel="N A")
-    plot_num_jobs_t(stats.NB_times,   sim_type, f"NB_rep{i+1}",   ylabel="N B")
-    plot_num_jobs_t(stats.NP_times,   sim_type, f"NP_rep{i+1}",   ylabel="N P")
-
-    if vs.TRANSIENT_ANALYSIS == 1:
-        # analisi del transitorio
-        plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
-        plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
-        plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
-        plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
-        plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
-    else:
+        replicationStats = ReplicationStats()
+        print("FINITE HYPEREXPONENTIAL BASE SIMULATION")
         
-        # plot dei tempi di risposta medi per replica
-        plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
-        plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
-        plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
-        plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
-        plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+        if vs.TRANSIENT_ANALYSIS == 1:
+            stop = STOP_ANALYSIS
+            vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
+            file_name = "hyperexponential_model_transient_analysis_results.csv"
+        else:
+            stop = STOP
+            vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
+            file_name = "hyperexponential_model_finite_results.csv"
+
+        clear_file(file_name)
+        for i in range(vs.REPLICATIONS):
+            if vs.MODEL == BASE:
+                print(f"start {i+1} replication")
+                results, stats = hyper_finite_simulation(stop)
+                print(f"end {i+1} replication")
+                write_file(results, file_name)
+                append_stats(replicationStats, results, stats)
+
+        sim_type = "hyperexponential_model"
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            # analisi del transitorio
+            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+        else:
+            
+            # plot dei tempi di risposta medi per replica
+            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
+            sim_type = "finite_simulation/hyperexponential_model" 
+            plot_num_jobs_t(stats.Nsys_times, sim_type, f"Nsys", ylabel="N system")
+            plot_num_jobs_t(stats.NA_times,   sim_type, f"NA",   ylabel="N A")
+            plot_num_jobs_t(stats.NB_times,   sim_type, f"NB",   ylabel="N B")
+            plot_num_jobs_t(stats.NP_times,   sim_type, f"NP",   ylabel="N P")
 
 
 def start():

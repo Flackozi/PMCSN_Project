@@ -3,12 +3,12 @@ import statistics
 import matplotlib.pyplot as plt
 import os
 
-file_path = "simulation/../output/"
+file_path = "simulation/../output/csv/"
 
 header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_avg_num_job', 'B_avg_resp',
           'B_avg_wait', 'B_avg_serv', 'B_utilization', 'B_avg_num_job', 'A1_avg_resp', 'A1_avg_wait', 'A1_avg_serv', 'A2_avg_resp',
           'A2_avg_wait', 'A2_avg_serv', 'A3_avg_resp', 'A3_avg_wait', 'A3_avg_serv', 'total_completed', 'system_avg_response_time', 
-          'system_avg_service_time', 'system_utilization', 'system_avg_wait', 'system_throughput', 'job_arrived', 'completions_A1', 'completions_A2',
+          'system_avg_service_time', 'system_utilization', 'system_avg_wait', 'system_avg_num_job', 'system_throughput', 'job_arrived', 'completions_A1', 'completions_A2',
           'completions_A3', 'completions_B', 'completions_P', 'horizon']
 
 def write_file(results, file_name):
@@ -175,22 +175,32 @@ def plot_analysis(resp_times, seed, name, sim_type):
     plt.close()
 
 
+# serve a fare il plot della popolazione di jobs nel sistema nel tempo. Usato principalmente per confronto tra Exponential e HyperExponential
 def plot_num_jobs_t(num_jobs_times, sim_type, name, ylabel="Number of jobs"):
     """
-    num_jobs_times: lista di tuple (t, N)
+    num_jobs_times: lista di tuple (t, N) per time series, o lista di float per batch means
     Salva in output/plot/{sim_type}/{name}.png
     """
-    output_dir = f"simulation/../output/plot/finite_simulation/{sim_type}"
+    output_dir = f"simulation/../output/plot/{sim_type}"
 
     if not num_jobs_times:
         return
 
-    x_values = [t for t, _ in num_jobs_times]
-    y_values = [n for _, n in num_jobs_times]
+    if isinstance(num_jobs_times[0], tuple):
+        # Time series
+        x_values = [t for t, _ in num_jobs_times]
+        y_values = [n for _, n in num_jobs_times]
+        plt.figure(figsize=(10, 6))
+        plt.step(x_values, y_values, where='post')
+        plt.xlabel('Time')
+    else:
+        # Batch means
+        x_values = list(range(1, len(num_jobs_times) + 1))
+        y_values = num_jobs_times
+        plt.figure(figsize=(10, 6))
+        plt.plot(x_values, y_values, linestyle='-')
+        plt.xlabel('Batch')
 
-    plt.figure(figsize=(10, 6))
-    plt.step(x_values, y_values, where='post')
-    plt.xlabel('Time')
     plt.ylabel(ylabel)
     plt.grid(True)
 

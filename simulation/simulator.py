@@ -148,13 +148,18 @@ def infinite_simulation(stop):
         stats.reset_infinite()
 
     if PRINT_PLOT_BATCH == 1:
-        sim_type = "base_model_infinite"
+        sim_type = "base_model"
         plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
         plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
         plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
         plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
         plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
+        
+        sim_type = "infinite_simulation/base_model"
+        plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
+        plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
+        plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
 
     remove_batch(batch_stats, 25)
     return batch_stats
@@ -372,6 +377,7 @@ def return_stats(stats, horizon, s):
         'system_utilization': max (stats.area_A.service/ horizon, stats.area_B.service / horizon,stats.area_P.service/ horizon)  if horizon > 0 else 0.0, # utilizzo del centro che rappresenta il bottleneck
         'system_avg_wait': system_avg_wait,
         'system_throughput': stats.index_A3 / horizon if horizon > 0 else 0.0,
+        'system_avg_num_job': (stats.area_A.node + stats.area_B.node + stats.area_P.node) / horizon if horizon > 0 else 0.0,
 
         "job_arrived": stats.job_arrived,
         "completions_A1": stats.index_A1,

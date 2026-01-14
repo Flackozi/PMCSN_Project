@@ -102,6 +102,109 @@ def record_num_jobs(stats):
     stats.NP_times.append((t, nP))
     stats.Nsys_times.append((t, nSys))
 
+def _check_areas_finite(stats, where):
+    if not math.isfinite(getattr(stats.area_A, "node", float("nan"))):
+        print(f"[ERROR] area_A.node non finito in: {where}")
+        print(f"  t.current={getattr(stats.t,'current',None)}, t.next={getattr(stats.t,'next',None)}, dt={(getattr(stats.t,'next',0)-getattr(stats.t,'current',0))}")
+        print(f"  arrival={stats.t.arrival}, compA={stats.t.completion_A}, compB={stats.t.completion_B}, compP={stats.t.completion_P}")
+        print(f"  return_times_P={return_times_P}")
+        print(f"  nA={len(stats.A_jobs)}, A_jobs keys={list(stats.A_jobs.keys())}")
+        print(f"  area_A before/after: node={getattr(stats.area_A,'node',None)}, service={getattr(stats.area_A,'service',None)}")
+        traceback.print_stack()
+        raise RuntimeError("area_A.node non finito")
+
+
+
+def hyper_infinite_simulation(stop): 
+
+    s = getSeed()
+    start_time = 0
+
+    batch_stats = ReplicationStats()
+    stats = SimulationStats()
+    stats.reset(START) 
+
+    reset_arrival_temp()         # azzera la variabile globale arrivalTemp
+    stats.reset(START)           # azzera lo stato della simulazione
+    stats.t.arrival = GetHyperArrival()   # primo arrivo esterno FINITO, non +inf
+    record_num_jobs(stats)   # campione iniziale (t=START)
+
+    while len(batch_stats.A_avg_wait) < K:
+        
+        while stats.job_arrived < B:
+            execute(stats, stop)
+            
+
+        stop_time = stats.t.current - start_time
+        start_time = stats.t.current
+
+        stats.calculate_area_queue()
+
+        _check_areas_finite(stats, "infinite_simulation: dopo calculate_area_queue")
+
+
+        # snapshot
+        comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
+        comp_B = stats.index_B
+        comp_P = stats.index_P
+
+        # medie di attesa e di permanenza (cumulative fino al checkpoint)
+        A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
+        B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+        # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
+        # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
+        
+        # tempo di risposta del centro = area.node / completamenti
+        A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
+        B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+
+        A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
+        A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
+        A3_wait = (stats.area_A3.node - stats.area_A3.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
+        
+        A1_resp = (stats.area_A1.node / stats.index_A1) if stats.index_A1 > 0 else 0.0
+        A2_resp = (stats.area_A2.node / stats.index_A2) if stats.index_A2 > 0 else 0.0
+        A3_resp = (stats.area_A3.node / stats.index_A3) if stats.index_A3 > 0 else 0.0
+
+        stats.A_wait_times.append((stats.t.current, A_wait))
+        stats.B_wait_times.append((stats.t.current, B_wait))
+        stats.A1_wait_times.append((stats.t.current, A1_wait))
+        stats.A2_wait_times.append((stats.t.current, A2_wait))
+        stats.A3_wait_times.append((stats.t.current, A3_wait))
+
+        stats.A_resp_times.append((stats.t.current, A_resp))
+        stats.B_resp_times.append((stats.t.current, B_resp))
+        stats.A1_resp_times.append((stats.t.current, A1_resp))
+        stats.A2_resp_times.append((stats.t.current, A2_resp))
+        stats.A3_resp_times.append((stats.t.current, A3_resp))
+
+
+        # collect replication statistics
+        rep_stats = return_stats(stats, stop_time, s)
+        write_file(rep_stats, "hyperexponential_model_infinite_results.csv")
+        append_stats(batch_stats, rep_stats, stats)
+
+
+        # reset stats for next replication
+        stats.reset_infinite()
+
+    if PRINT_PLOT_BATCH == 1:
+        sim_type = "hyperexponential_model"
+        plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
+        plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
+        plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
+        plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
+        plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
+        plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
+
+        sim_type = "infinite_simulation/hyperexponential_model"
+
+        plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
+        plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
+        plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
+
+    remove_batch(batch_stats, 25)
+    return batch_stats
 
 def execute(stats, stop):
     global return_times_P
@@ -276,6 +379,8 @@ def return_stats(stats, horizon, s):
         'system_utilization': max (stats.area_A.service/ horizon, stats.area_B.service / horizon,stats.area_P.service/ horizon)  if horizon > 0 else 0.0, # utilizzo del centro che rappresenta il bottleneck
         'system_avg_wait': system_avg_wait,
         'system_throughput': stats.index_A3 / horizon if horizon > 0 else 0.0,
+        'system_avg_num_job': (stats.area_A.node + stats.area_B.node + stats.area_P.node) / horizon if horizon > 0 else 0.0,
+
 
         "job_arrived": stats.job_arrived,
         "completions_A1": stats.index_A1,

@@ -89,12 +89,12 @@ def get_service_P_2FA():
 def HyperExponential(m):
     """Generate a Hyper-Exponential random variate, use m > 0.0."""
     selectStream(0)
-    p = 0.4  # probabilità di scegliere la prima fase
+    p = 0.7  # probabilità di scegliere la prima fase
     u = random()
     if u < p:
-        return - (m/0.8) * log(1.0 - random())  # prima fase con media m/(0.4*2)
+        return - (m/1.4) * log(1.0 - random())  # prima fase con media m/(0.4*2)
     else:
-        return - (m/1.2) * log(1.0 - random())  # seconda fase con media m/(0.6*2)
+        return - (m/0.6) * log(1.0 - random())  # seconda fase con media m/(0.6*2)
 
 def GetHyperArrival():
     """Generate the next arrival time for the first server with Hyper-Exponential."""
@@ -114,6 +114,7 @@ def append_stats(replicationStats, results, stats):
     replicationStats.system_avg_wait.append(results['system_avg_wait'])
     replicationStats.system_avg_response_time.append(results['system_avg_response_time'])   
     replicationStats.system_avg_service_time.append(results['system_avg_service_time'])
+    replicationStats.system_avg_num_job.append(results['system_avg_num_job'])
     replicationStats.system_utilization.append(results['system_utilization'])
 
     replicationStats.A_avg_wait.append(results['A_avg_wait'])
