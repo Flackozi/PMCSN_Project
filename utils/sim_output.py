@@ -5,8 +5,9 @@ import os
 
 file_path = "simulation/../output/csv/"
 
-header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_avg_num_job', 'B_avg_resp',
-          'B_avg_wait', 'B_avg_serv', 'B_utilization', 'B_avg_num_job', 'A1_avg_resp', 'A1_avg_wait', 'A1_avg_serv', 'A2_avg_resp',
+header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_avg_num_job', 'A_throughput' ,'B_avg_resp',
+          'B_avg_wait', 'B_avg_serv', 'B_utilization', 'B_avg_num_job', 'B_throughput', 'P_avg_resp', 'P_avg_wait', 'P_avg_serv', 
+          'P_utilization', 'P_avg_num_job', 'P_throughput', 'A1_avg_resp', 'A1_avg_wait', 'A1_avg_serv', 'A2_avg_resp',
           'A2_avg_wait', 'A2_avg_serv', 'A3_avg_resp', 'A3_avg_wait', 'A3_avg_serv', 'total_completed', 'system_avg_response_time', 
           'system_avg_service_time', 'system_utilization', 'system_avg_wait', 'system_avg_num_job', 'system_throughput', 'job_arrived', 'completions_A1', 'completions_A2',
           'completions_A3', 'completions_B', 'completions_P', 'horizon']
@@ -128,6 +129,11 @@ def plot_spike_active_t(spike_active_times, sim_type, name):
     plt.xlabel('Time')
     plt.ylabel('Spike server active (0/1)')
     plt.ylim(-0.1, 1.1)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
 
 # Funzione che plotta i tempi di risposta in funzione del tempo (una serie per ogni replica)
 def plot_replication_response_times(resp_times, sim_type, name):

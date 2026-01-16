@@ -10,14 +10,13 @@ plantSeeds(SEED)
 time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint each 1000 sec
 current_checkpoint = 0
 
-return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
+# return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
 
 
 
 def finite_simulation(stop):
-    global current_checkpoint, return_times_P
-    current_checkpoint = 0
-    return_times_P = [] 
+    global current_checkpoint
+    current_checkpoint = 0 
     s = getSeed()
     reset_arrival_temp()
 
@@ -30,7 +29,7 @@ def finite_simulation(stop):
     record_num_jobs(stats)   # campione iniziale (t=START)
 
 
-    while (stats.t.arrival < stop) or (stats.A_jobs) or (stats.B_jobs) or (len(return_times_P) > 0):
+    while (stats.t.arrival < stop) or (stats.A_jobs) or (stats.B_jobs) or (stats.P_jobs):
         execute(stats, stop)
         if current_checkpoint < len(time_checkpoints) and stats.t.current >= time_checkpoints[current_checkpoint]:
             # snapshot
@@ -41,12 +40,14 @@ def finite_simulation(stop):
             # medie di attesa e di permanenza (cumulative fino al checkpoint)
             A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
             B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+            P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
             # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
             # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
             
             # tempo di risposta del centro = area.node / completamenti
             A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
             B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+            P_resp = (stats.area_P.node / comp_P) if comp_P > 0 else 0.0
 
             A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
             A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
@@ -58,12 +59,14 @@ def finite_simulation(stop):
 
             stats.A_wait_times.append((stats.t.current, A_wait))
             stats.B_wait_times.append((stats.t.current, B_wait))
+            stats.P_wait_times.append((stats.t.current, P_wait))
             stats.A1_wait_times.append((stats.t.current, A1_wait))
             stats.A2_wait_times.append((stats.t.current, A2_wait))
             stats.A3_wait_times.append((stats.t.current, A3_wait))
 
             stats.A_resp_times.append((stats.t.current, A_resp))
             stats.B_resp_times.append((stats.t.current, B_resp))
+            stats.P_resp_times.append((stats.t.current, P_resp))
             stats.A1_resp_times.append((stats.t.current, A1_resp))
             stats.A2_resp_times.append((stats.t.current, A2_resp))
             stats.A3_resp_times.append((stats.t.current, A3_resp))
@@ -110,12 +113,14 @@ def infinite_simulation(stop):
         # medie di attesa e di permanenza (cumulative fino al checkpoint)
         A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
         B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+        P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
         # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
         # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
         
         # tempo di risposta del centro = area.node / completamenti
         A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
         B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+        P_resp = (stats.area_P.node / comp_P) if comp_P > 0 else 0.0
 
         A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
         A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
@@ -127,12 +132,14 @@ def infinite_simulation(stop):
 
         stats.A_wait_times.append((stats.t.current, A_wait))
         stats.B_wait_times.append((stats.t.current, B_wait))
+        stats.P_wait_times.append((stats.t.current, P_wait))
         stats.A1_wait_times.append((stats.t.current, A1_wait))
         stats.A2_wait_times.append((stats.t.current, A2_wait))
         stats.A3_wait_times.append((stats.t.current, A3_wait))
 
         stats.A_resp_times.append((stats.t.current, A_resp))
         stats.B_resp_times.append((stats.t.current, B_resp))
+        stats.P_resp_times.append((stats.t.current, P_resp))
         stats.A1_resp_times.append((stats.t.current, A1_resp))
         stats.A2_resp_times.append((stats.t.current, A2_resp))
         stats.A3_resp_times.append((stats.t.current, A3_resp))
@@ -152,6 +159,7 @@ def infinite_simulation(stop):
         plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
         plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
         plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
+        plot_batch
         plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
         plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
@@ -159,6 +167,7 @@ def infinite_simulation(stop):
         sim_type = "infinite_simulation/base_model"
         plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
         plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
+        plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
         plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
 
     remove_batch(batch_stats, 25)
@@ -170,7 +179,7 @@ def _check_areas_finite(stats, where):
         print(f"[ERROR] area_A.node non finito in: {where}")
         print(f"  t.current={getattr(stats.t,'current',None)}, t.next={getattr(stats.t,'next',None)}, dt={(getattr(stats.t,'next',0)-getattr(stats.t,'current',0))}")
         print(f"  arrival={stats.t.arrival}, compA={stats.t.completion_A}, compB={stats.t.completion_B}, compP={stats.t.completion_P}")
-        print(f"  return_times_P={return_times_P}")
+        print(f"  P_jobs={stats.P_jobs}")
         print(f"  nA={len(stats.A_jobs)}, A_jobs keys={list(stats.A_jobs.keys())}")
         print(f"  area_A before/after: node={getattr(stats.area_A,'node',None)}, service={getattr(stats.area_A,'service',None)}")
         traceback.print_stack()
@@ -185,7 +194,7 @@ def update_completion(jobs, current_time):
         
         if min_remaining < 0:
             print(f"[WARNING] min_remaining negativo: {min_remaining}")
-            print(f"  Jobs: {jobs}")
+            # print(f"  Jobs: {jobs}")
             min_remaining = 0  # Forza a 0 per evitare tempi nel passato
         
         n = len(jobs)
@@ -195,7 +204,7 @@ def record_num_jobs(stats):
     # popolazioni istantanee
     nA = len(stats.A_jobs)
     nB = len(stats.B_jobs)
-    nP = len(return_times_P)
+    nP = len(stats.P_jobs)
     nSys = nA + nB + nP
 
     t = stats.t.current
@@ -206,18 +215,12 @@ def record_num_jobs(stats):
 
 
 def execute(stats, stop):
-    global return_times_P
-    if return_times_P:
-        stats.t.completion_P = min(return_times_P) #prendo l'elemento che ha il tempo di ritorno in A più piccolo
-    else: 
-        stats.t.completion_P = INFINITY
-        stats.t.return_P = INFINITY
-
     stats.t.next = min(stats.t.arrival, stats.t.completion_A, stats.t.completion_B, stats.t.completion_P) #prendo il tempo del prossimo evento    
     
     dt = stats.t.next - stats.t.current #tempo che ho a disposizione fino al prossimo evento
 
     if len(stats.A_jobs)>0:
+
         nA = len(stats.A_jobs)
         stats.area_A.node += dt * nA #aggiorno area sotto la curva
         stats.area_A.service += dt
@@ -251,10 +254,20 @@ def execute(stats, stop):
         for job in stats.B_jobs.values():
             job["rem"] -= delta
 
+    # --- P: aggiornamento aree e servizio (PS multiserver) ---
+    if stats.P_jobs:
+        nP = len(stats.P_jobs)
+        stats.area_P.node += dt * nP
+        stats.area_P.service += dt
+        delta = dt / nP
+        for job in stats.P_jobs.values():
+            job["rem"] -= delta
+
     stats.t.current = stats.t.next #avanziamo l'orologio
 
     if stats.t.current == stats.t.arrival: 
         print(f"ARRIVAL | current: {stats.t.current:.4f}")
+
         #arrivo esterno in A
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -286,17 +299,17 @@ def execute(stats, stop):
             stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
         elif job["classe"] == 2:
             #job di classe 2, va in P
-            service_P = get_service_P()
-            return_time = stats.t.current + service_P #calcolo il tempo di ritorno in A
-            return_times_P.append(return_time) #aggiungo il tempo di ritorno in A alla lista
+            jid = stats.next_job_id  
+            stats.next_job_id  += 1 
+            stats.P_jobs[jid] = {"rem": get_service_P()} #aggiungo il job a P
             stats.index_A2 += 1
-            stats.area_P.service += service_P #aggiorno l'area di P (tempo di servizio cumulativo)
-            
+            stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current) # aggiorniamo il prossimo completamento di P
+
             
         elif job["classe"] == 3:
             #job di classe 3, esce dal sistema
             stats.index_A3 += 1
-            # stats.job_times[jid]["departure"] = stats.t.current
+            # stats.job_times[jid]["departure"] = stats.t.current  # salvo il tempo di completamento del job
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     
@@ -315,14 +328,23 @@ def execute(stats, stop):
 
     elif stats.t.current == stats.t.completion_P: #completamento in P
         print(f"COMPLETION_P | current: {stats.t.current:.4f}")
-        # if return_times_P:
-        return_times_P.remove(stats.t.current) #rimuovo il tempo di ritorno in A dalla lista
-        stats.index_P += 1
-        jid = stats.next_job_id  
-        stats.next_job_id  += 1
-        stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)} #aggiungo il job a A
+        jid, job = min(stats.P_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
+        del stats.P_jobs[jid] #rimuovo il job da P
 
+        stats.index_P += 1
+        jid = stats.next_job_id
+        stats.next_job_id += 1
+        stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)} #aggiungo il job a A
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
+        stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current) # aggiorniamo il prossimo completamento di P
+        # # if return_times_P:
+        # return_times_P.remove(stats.t.current) #rimuovo il tempo di ritorno in A dalla lista
+        # stats.index_P += 1
+        # jid = stats.next_job_id  
+        # stats.next_job_id  += 1
+        # stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)} #aggiungo il job a A
+
+        # stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
 
     # registra popolazioni dopo aver aggiornato lo stato dell'evento
     record_num_jobs(stats)
@@ -332,6 +354,7 @@ def return_stats(stats, horizon, s):
     # medie finali
     comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
     comp_B = stats.index_B
+    comp_P = stats.index_P
     
 
     system_avg_response = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
@@ -347,6 +370,7 @@ def return_stats(stats, horizon, s):
         "A_utilization": stats.area_A.service / horizon if horizon > 0 else 0.0,
         "A_avg_num_job": stats.area_A.node / horizon if horizon > 0 else 0.0,
         "A_avg_serv": stats.area_A.service / comp_A if comp_A > 0 else 0.0,
+        "A_throughput": comp_A / horizon if horizon > 0 else 0.0,
 
         # statistiche centro B
         "B_avg_resp": stats.area_B.node / comp_B if comp_B > 0 else 0.0,
@@ -354,6 +378,15 @@ def return_stats(stats, horizon, s):
         "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
         "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
         "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
+        "B_throughput": comp_B / horizon if horizon > 0 else 0.0,
+
+        # statistiche centro P (M/M/1 PS)
+        "P_avg_resp": stats.area_P.node / comp_P if comp_P > 0 else 0.0,
+        "P_avg_wait": stats.area_P.queue / comp_P if comp_P > 0 else 0.0,
+        "P_avg_serv": stats.area_P.service / comp_P if comp_P > 0 else 0.0,
+        "P_utilization": stats.area_P.service / horizon if horizon > 0 else 0.0,
+        "P_avg_num_job": stats.area_P.node / horizon if horizon > 0 else 0.0,
+        "P_throughput": comp_P / horizon if horizon > 0 else 0.0,
 
         # statistiche job di classe 1 su A
         "A1_avg_resp": stats.area_A1.node / stats.index_A1 if stats.index_A1 > 0 else 0.0,
@@ -374,7 +407,7 @@ def return_stats(stats, horizon, s):
         'total_completed': stats.index_A3,
         'system_avg_response_time': system_avg_response,
         'system_avg_service_time': system_avg_service,
-        'system_utilization': max (stats.area_A.service/ horizon, stats.area_B.service / horizon,stats.area_P.service/ horizon)  if horizon > 0 else 0.0, # utilizzo del centro che rappresenta il bottleneck
+        'system_utilization': max (stats.area_A.service/ horizon, stats.area_B.service / horizon, stats.area_P.service/ horizon)  if horizon > 0 else 0.0, # utilizzo del centro che rappresenta il bottleneck
         'system_avg_wait': system_avg_wait,
         'system_throughput': stats.index_A3 / horizon if horizon > 0 else 0.0,
         'system_avg_num_job': (stats.area_A.node + stats.area_B.node + stats.area_P.node) / horizon if horizon > 0 else 0.0,

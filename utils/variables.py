@@ -45,16 +45,17 @@ SEED = 123456789
 
 REPLICATIONS = 50
 
-TRANSIENT_ANALYSIS = 0  # 1 per fare l'analisi del transitorio, 0 per simulazioni finite/infinite normali
+TRANSIENT_ANALYSIS = 1  # 1 per fare l'analisi del transitorio, 0 per simulazioni finite/infinite normali
 
 PRINT_PLOT_BATCH = 1
 
 # --- PARAMETRI DI SCALING ---
 SImax = 8 
-MIN_SERVERS = 1
-MAX_SERVERS = 2 #calcolato analiticamente 
+# MIN_SERVERS = 1
+# MAX_SERVERS = 2 #calcolato analiticamente 
 RHO_UP = 0.8 #rho target per scalare up
 RHO_DOWN = 0.5 #rho target per scalare down
+RHO_CHECK_INTERVAL = 4000.0 # ogni quanto (secondi) scatta il controllo periodico di rho(B)
 BASE_MU_LAYER1 = 1.25     # 1 / mean service time
 BASE_MU_SPIKE = 1.875      # spike più veloce (vertical scaling) -> 1.25 * k = 1.25 * 1.5 perche k > 1
 LAMBDA_NORMAL_MAX = 1.5   # dato che la sinusoide va 0.9 → 1.5

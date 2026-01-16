@@ -11,8 +11,6 @@ plantSeeds(SEED)
 time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint ogni 1000 sec
 current_checkpoint = 0
 
-return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
-
 
 def update_completion(jobs, current_time):
     if not jobs:
@@ -51,55 +49,43 @@ def update_completion_B(jobs, current_time, m_servers: int):
     return current_time + (min_remaining * n) / busy
 
  
-def adjust_servers_layer1(stats, lambda_current):
+def adjust_servers_layer1(stats):
     """Aggiunge o rimuove server nel layer 1 in base a λ corrente e ai parametri RHO_UP/RHO_DOWN."""
-    stats.layer1_servers
-
-    # se non ci sono server accesi, accendiamo il primo
     if not stats.layer1_servers:
         stats.layer1_servers.append({"id": 0, "jobs": {}})
-        return
 
     num = len(stats.layer1_servers)
-    mu = BASE_MU_LAYER1      # tasso di servizio per UN server del layer 1
 
-    if num <= 0:
-        return
+    d_service  = stats.area_B.service   - stats.last_B_service
+    d_capacity = stats.area_B.capacity  - stats.last_B_capacity
+    rho = (d_service / d_capacity) if d_capacity > 1e-12 else 0.0
 
-    rho = lambda_current / (num * mu)
+    stats.rhoB_samples.append((stats.t.current, rho))
 
-    # scala in su
-    if rho > RHO_UP and num < MAX_SERVERS:
+    if rho > RHO_UP:
         new_id = max(s["id"] for s in stats.layer1_servers) + 1
         stats.layer1_servers.append({"id": new_id, "jobs": {}})
-        print(f"[SCALING L1] +1 server, tot={len(stats.layer1_servers)}")
+        print(f"[SCALING L1] rho_win={rho:.3f} > {RHO_UP} -> +1 server, tot={len(stats.layer1_servers)}")
 
-    # scala in giù
-    elif rho < RHO_DOWN and num > MIN_SERVERS:
-    # rimuovo un server solo se ci sono meno job che server
+    elif rho < RHO_DOWN:
         if len(stats.B_jobs) < num:
             stats.layer1_servers.pop()
-            print(f"[SCALING L1] -1 server, tot={len(stats.layer1_servers)}")
+            print(f"[SCALING L1] rho_win={rho:.3f} < {RHO_DOWN} -> -1 server, tot={len(stats.layer1_servers)}")
+
+    stats.last_B_service = stats.area_B.service
+    stats.last_B_capacity = stats.area_B.capacity
 
 
 
 def execute(stats, stop):
-    global return_times_P
-
-    # --- COMPLETION IN P ---
-    if return_times_P:
-        stats.t.completion_P = min(return_times_P)  # prossimo ritorno da P ad A
-    else:
-        stats.t.completion_P = INFINITY
-        stats.t.return_P = INFINITY
-
     # --- PROSSIMO EVENTO (incluso SPIKE) ---
     stats.t.next = min(
         stats.t.arrival,
         stats.t.completion_A,
         stats.t.completion_B,
         stats.t.completion_P,
-        stats.t.completion_spike,   
+        stats.t.completion_spike,  
+        stats.t.rho_check 
     )
 
     dt = stats.t.next - stats.t.current  # tempo fino al prossimo evento
@@ -144,6 +130,15 @@ def execute(stats, stop):
         for job in stats.B_jobs.values():
             job["rem"] -= delta
 
+    # --- P: aggiornamento aree e servizio (PS multiserver) ---
+    if stats.P_jobs:
+        nP = len(stats.P_jobs)
+        stats.area_P.node += dt * nP
+        stats.area_P.service += dt
+        delta = dt / nP
+        for job in stats.P_jobs.values():
+            job["rem"] -= delta
+
     # --- SPIKE: aggiornamento aree e servizio (PS) ---
     if stats.spike_server:
         nS = len(stats.spike_server) # numero di job nello spike server
@@ -155,6 +150,8 @@ def execute(stats, stop):
 
     # AVANZA L'OROLOGIO
     stats.t.current = stats.t.next
+
+
 
     # =========================
     #       EVENTI
@@ -181,10 +178,22 @@ def execute(stats, stop):
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
 
+    # --- CHECK PERIODICO DI RHO(B) E SCALING LAYER 1 ---
+    elif stats.t.current == stats.t.rho_check:
+        adjust_servers_layer1(stats)
+
+        # prossimo check: dopo STOP lo spengo per non allungare la fase di drain
+        next_check = stats.t.current + vs.RHO_CHECK_INTERVAL
+        stats.t.rho_check = next_check if next_check <= stop else INFINITY
+
+        # se è cambiato m, ricalcolo la completion di B (dipende da m)
+        mB_now = len(stats.layer1_servers) if stats.layer1_servers else 1
+        stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB_now)
+
+
     # --- COMPLETION IN A ---
     elif stats.t.current == stats.t.completion_A:
         print(f"COMPLETION_A | current: {stats.t.current:.4f}")
-
         jid, job = min(stats.A_jobs.items(), key=lambda x: x[1]["rem"])
         del stats.A_jobs[jid]
 
@@ -192,9 +201,8 @@ def execute(stats, stop):
             # job classe 1 → B oppure SPIKE in base a SI
             # SI = numero di job nel layer 1 (qui usiamo B come layer1 )
 
-            # SCALING ORIZZONTALE: aggiorno il numero di server del layer 1 (server B)
             lam_now = lambda_scaling(stats.t.current)
-            adjust_servers_layer1(stats, lambda_current=lam_now)
+            
             mB_now = max(1, len(stats.layer1_servers))
 
             
@@ -238,12 +246,12 @@ def execute(stats, stop):
                 )
 
         elif job["classe"] == 2:
-            # job classe 2 → P
-            service_P = get_service_P()
-            return_time = stats.t.current + service_P
-            return_times_P.append(return_time)
+            # job classe 2 → P (processor sharing)
+            jid_P = stats.next_job_id
+            stats.next_job_id += 1
+            stats.P_jobs[jid_P] = {"rem": get_service_P()}
             stats.index_A2 += 1
-            stats.area_P.service += service_P
+            stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current)
 
         elif job["classe"] == 3:
             # job classe 3 → esce
@@ -273,8 +281,8 @@ def execute(stats, stop):
     # --- COMPLETION IN P ---
     elif stats.t.current == stats.t.completion_P:
         print(f"COMPLETION_P | current: {stats.t.current:.4f}")
-
-        return_times_P.remove(stats.t.current)
+        jid, job = min(stats.P_jobs.items(), key=lambda x: x[1]["rem"])
+        del stats.P_jobs[jid]
         stats.index_P += 1
 
         jid = stats.next_job_id
@@ -282,6 +290,7 @@ def execute(stats, stop):
         stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)}
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
+        stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current)
 
     # --- COMPLETION NELLO SPIKE ---
     elif stats.t.current == stats.t.completion_spike:
@@ -309,15 +318,23 @@ def scaling_finite_simulation(stop):
     Simulazione FINITA con scaling dinamico,
     strutturata come finite_simulation(stop) del modello base.
     """
-    global current_checkpoint, return_times_P
+    global current_checkpoint
     current_checkpoint = 0
-    return_times_P = []
 
     s = getSeed()
     reset_arrival_temp_scaling()
 
     stats = SimulationStats()
     stats.reset(vs.START)
+
+    # snapshot iniziale delle aree (finestra parte da START)
+    stats.last_B_service = stats.area_B.service
+    stats.last_B_capacity = stats.area_B.capacity
+    stats.rhoB_samples = []
+
+    first_check = stats.t.current + vs.RHO_CHECK_INTERVAL
+    stats.t.rho_check = first_check if first_check <= stop else INFINITY
+
 
     #per plot spike 
     stats.spike_active_times = [(stats.t.current, 0)]
@@ -332,8 +349,8 @@ def scaling_finite_simulation(stop):
     (stats.t.arrival < stop)
     or stats.A_jobs
     or stats.B_jobs
+    or stats.P_jobs
     or stats.spike_server
-    or (return_times_P and min(return_times_P) < INFINITY)
     ):
         execute(stats, stop)
 
@@ -345,9 +362,11 @@ def scaling_finite_simulation(stop):
 
             A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
             B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+            P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
 
             A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
             B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+            P_resp = (stats.area_P.node / comp_P) if comp_P > 0 else 0.0
 
             A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
             A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
@@ -359,12 +378,14 @@ def scaling_finite_simulation(stop):
 
             stats.A_wait_times.append((stats.t.current, A_wait))
             stats.B_wait_times.append((stats.t.current, B_wait))
+            stats.P_wait_times.append((stats.t.current, P_wait))
             stats.A1_wait_times.append((stats.t.current, A1_wait))
             stats.A2_wait_times.append((stats.t.current, A2_wait))
             stats.A3_wait_times.append((stats.t.current, A3_wait))
 
             stats.A_resp_times.append((stats.t.current, A_resp))
             stats.B_resp_times.append((stats.t.current, B_resp))
+            stats.P_resp_times.append((stats.t.current, P_resp))
             stats.A1_resp_times.append((stats.t.current, A1_resp))
             stats.A2_resp_times.append((stats.t.current, A2_resp))
             stats.A3_resp_times.append((stats.t.current, A3_resp))
@@ -431,6 +452,14 @@ def return_stats(stats, horizon, s):
         "B_utilization": B_util,
         # "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
         "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
+
+        # statistiche centro P
+        "P_avg_resp": stats.area_P.node / comp_P if comp_P > 0 else 0.0,
+        "P_avg_wait": stats.area_P.queue / comp_P if comp_P > 0 else 0.0,
+        "P_avg_serv": stats.area_P.service / comp_P if comp_P > 0 else 0.0,
+        "P_utilization": stats.area_P.service / horizon if horizon > 0 else 0.0,
+        "P_avg_num_job": stats.area_P.node / horizon if horizon > 0 else 0.0,
+        "P_throughput": comp_P / horizon if horizon > 0 else 0.0,
 
         # statistiche job di classe 1 su A
         "A1_avg_resp": stats.area_A1.node / stats.index_A1 if stats.index_A1 > 0 else 0.0,

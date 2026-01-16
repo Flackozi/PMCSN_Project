@@ -51,14 +51,17 @@ def start_finite_sim():
         # analisi del transitorio
         plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
         plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+        plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
         plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
         plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
         plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+        
     else:
         
         # plot dei tempi di risposta medi per replica
         plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
         plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+        plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
         plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
         plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
         plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
@@ -148,10 +151,14 @@ def start_scaling_sim():
             stop = STOP_ANALYSIS
             vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
             file_name = "scaling_model_transient_analysis_results.csv"
+            sim_type = "transient_analysis/scaling_model"
+
         else:
             stop = STOP
             vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
             file_name = "scaling_model_finite_results.csv"
+            sim_type = "finite_simulation/scaling_model"
+
 
         print("FINITE SCALING SIMULATION")
 
@@ -166,11 +173,12 @@ def start_scaling_sim():
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
 
-        sim_type = "scaling_model"
         plot_lambda_t(stats.lambda_times, sim_type, "lambda_t")
         plot_system_avg_response_time_t(stats.system_resp_times, sim_type, "system_resp_t")
         plot_active_servers_t(stats.layer1_servers_times, sim_type, "servers_t")
         plot_spike_active_t(stats.spike_active_times, sim_type, "spike_active_t")
+
+        sim_type = "scaling_model"
 
         if vs.TRANSIENT_ANALYSIS == 1:
             # analisi del transitorio

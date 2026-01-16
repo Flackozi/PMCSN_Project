@@ -129,6 +129,12 @@ def append_stats(replicationStats, results, stats):
     replicationStats.B_utilization.append(results['B_utilization'])
     replicationStats.B_avg_num_job.append(results['B_avg_num_job'])
 
+    replicationStats.P_avg_wait.append(results['P_avg_wait'])
+    replicationStats.P_avg_serv.append(results['P_avg_serv'])
+    replicationStats.P_avg_resp.append(results['P_avg_resp'])
+    replicationStats.P_utilization.append(results['P_utilization'])
+    replicationStats.P_avg_num_job.append(results['P_avg_num_job'])
+
     replicationStats.A1_avg_wait.append(results['A1_avg_wait'])
     replicationStats.A1_avg_resp.append(results['A1_avg_resp'])
     replicationStats.A1_avg_serv.append(results['A1_avg_serv'])
@@ -143,12 +149,14 @@ def append_stats(replicationStats, results, stats):
 
     replicationStats.A_wait_interval.append(stats.A_wait_times)
     replicationStats.B_wait_interval.append(stats.B_wait_times)
+    replicationStats.P_wait_interval.append(stats.P_wait_times)
     replicationStats.A1_wait_interval.append(stats.A1_wait_times)
     replicationStats.A2_wait_interval.append(stats.A2_wait_times)
     replicationStats.A3_wait_interval.append(stats.A3_wait_times)
 
     replicationStats.A_resp_interval.append(stats.A_resp_times)
     replicationStats.B_resp_interval.append(stats.B_resp_times)
+    replicationStats.P_resp_interval.append(stats.P_resp_times)
     replicationStats.A1_resp_interval.append(stats.A1_resp_times)
     replicationStats.A2_resp_interval.append(stats.A2_resp_times)
     replicationStats.A3_resp_interval.append(stats.A3_resp_times)

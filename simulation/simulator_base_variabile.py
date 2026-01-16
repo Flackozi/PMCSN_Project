@@ -11,8 +11,6 @@ plantSeeds(SEED)
 time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint each 1000 sec
 current_checkpoint = 0
 
-return_times_P = [] #lista che contiene i tempi dei job che escono da P, e vanno in A
-
 def finite_simulation(stop):
     global current_checkpoint
     current_checkpoint = 0
@@ -26,7 +24,7 @@ def finite_simulation(stop):
     # Arrivi con lambda variabile
     stats.t.arrival = GetArrivalScaling(stats.t.current)
 
-    while (stats.t.arrival < stop) or (stats.A_jobs) or (stats.B_jobs) or (len(return_times_P) > 0):
+    while (stats.t.arrival < stop) or (stats.A_jobs) or (stats.B_jobs) or (stats.P_jobs):
         execute(stats, stop)
         if current_checkpoint < len(time_checkpoints) and stats.t.current >= time_checkpoints[current_checkpoint]:
             # snapshot
@@ -37,12 +35,14 @@ def finite_simulation(stop):
             # medie di attesa e di permanenza (cumulative fino al checkpoint)
             A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
             B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+            P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
             # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
             # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
             
             # tempo di risposta del centro = area.node / completamenti
             A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
             B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+            P_resp = (stats.area_P.node / comp_P) if comp_P > 0 else 0.0
 
             A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
             A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
@@ -54,12 +54,14 @@ def finite_simulation(stop):
 
             stats.A_wait_times.append((stats.t.current, A_wait))
             stats.B_wait_times.append((stats.t.current, B_wait))
+            stats.P_wait_times.append((stats.t.current, P_wait))
             stats.A1_wait_times.append((stats.t.current, A1_wait))
             stats.A2_wait_times.append((stats.t.current, A2_wait))
             stats.A3_wait_times.append((stats.t.current, A3_wait))
 
             stats.A_resp_times.append((stats.t.current, A_resp))
             stats.B_resp_times.append((stats.t.current, B_resp))
+            stats.P_resp_times.append((stats.t.current, P_resp))
             stats.A1_resp_times.append((stats.t.current, A1_resp))
             stats.A2_resp_times.append((stats.t.current, A2_resp))
             stats.A3_resp_times.append((stats.t.current, A3_resp))
@@ -162,58 +164,13 @@ def _check_areas_finite(stats, where):
         print(f"[ERROR] area_A.node non finito in: {where}")
         print(f"  t.current={getattr(stats.t,'current',None)}, t.next={getattr(stats.t,'next',None)}, dt={(getattr(stats.t,'next',0)-getattr(stats.t,'current',0))}")
         print(f"  arrival={stats.t.arrival}, compA={stats.t.completion_A}, compB={stats.t.completion_B}, compP={stats.t.completion_P}")
-        print(f"  return_times_P={return_times_P}")
+        print(f"  P_jobs={stats.P_jobs}")
         print(f"  nA={len(stats.A_jobs)}, A_jobs keys={list(stats.A_jobs.keys())}")
         print(f"  area_A before/after: node={getattr(stats.area_A,'node',None)}, service={getattr(stats.area_A,'service',None)}")
         traceback.print_stack()
         raise RuntimeError("area_A.node non finito")
 
-def infinite_prova(stop):
 
-    """Simulazione infinita di prova, senza l'utilizzo del batch means. 
-        Serve a calcolare la serie di tempi di risposta da utilizzare per la scelta del batch size.
-    """
-    n_completions = 100000 #numero di completamenti da raggiungere
-    global current_checkpoint
-    current_checkpoint = 0
-    s = getSeed()
-    reset_arrival_temp()
-
-    stats = SimulationStats()
-    stats.reset(vs.START)
-
-    # schedule first external arrival
-    stats.t.arrival = GetArrival()
-
-    job_resp_times = []
-
-    while stats.index_A3 < n_completions:
-        execute2(stats, stop)
-
-    print("1")
-
-    for job in stats.job_times.values():
-        if job["departure"] is not None:
-            resp_time = job["departure"] - job["arrival"]
-            job_resp_times.append(resp_time)
-
-    print("2")
-            
-    # scrivo la lista in un file di output acs_raw_rt.dat
-    # scrivo la lista in un file di output acs_raw_rt.dat dentro la cartella "output"
-    import os
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    output_dir = os.path.join(project_root, "output")
-    os.makedirs(output_dir, exist_ok=True)
-    out_path = os.path.join(output_dir, "acs_raw_rt.dat")
-    with open(out_path, "w") as f:
-        for rt in job_resp_times:
-            f.write(f"{rt}\n")
-    # ...existing code...
-
-    print("3")
-
-    return job_resp_times
 
 def update_completion(jobs, current_time):
     if not jobs:
@@ -230,12 +187,6 @@ def update_completion(jobs, current_time):
         return current_time + min_remaining * n
 
 def execute(stats, stop):
-    if return_times_P:
-        stats.t.completion_P = min(return_times_P) #prendo l'elemento che ha il tempo di ritorno in A più piccolo
-    else: 
-        stats.t.completion_P = INFINITY
-        stats.t.return_P = INFINITY
-
     stats.t.next = min(stats.t.arrival, stats.t.completion_A, stats.t.completion_B, stats.t.completion_P) #prendo il tempo del prossimo evento    
     
     dt = stats.t.next - stats.t.current #tempo che ho a disposizione fino al prossimo evento
@@ -274,10 +225,18 @@ def execute(stats, stop):
         for job in stats.B_jobs.values():
             job["rem"] -= delta
 
+    # --- P: aggiornamento aree e servizio (PS multiserver) ---
+    if stats.P_jobs:
+        nP = len(stats.P_jobs)
+        stats.area_P.node += dt * nP
+        stats.area_P.service += dt
+        delta = dt / nP
+        for job in stats.P_jobs.values():
+            job["rem"] -= delta
+
     stats.t.current = stats.t.next #avanziamo l'orologio
 
     if stats.t.current == stats.t.arrival: 
-        print(f"ARRIVAL | current: {stats.t.current:.4f}")
         #arrivo esterno in A
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -296,7 +255,6 @@ def execute(stats, stop):
         stats.job_arrived += 1 #incrementiamo il contatore dei job arrivati
 
     elif stats.t.current == stats.t.completion_A: #completamento in A
-        print(f"COMPLETION_A | current: {stats.t.current:.4f}")
         jid, job = min(stats.A_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.A_jobs[jid] #rimuovo il job da A
 
@@ -309,11 +267,11 @@ def execute(stats, stop):
             stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
         elif job["classe"] == 2:
             #job di classe 2, va in P
-            service_P = get_service_P()
-            return_time = stats.t.current + service_P #calcolo il tempo di ritorno in A
-            return_times_P.append(return_time) #aggiungo il tempo di ritorno in A alla lista
+            jid_P = stats.next_job_id 
+            stats.next_job_id += 1
+            stats.P_jobs[jid_P] = {"rem": get_service_P()}
             stats.index_A2 += 1
-            stats.area_P.service += service_P #aggiorno l'area di P (tempo di servizio cumulativo)
+            stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current) # aggiorniamo il prossimo completamento di P
             
             
         elif job["classe"] == 3:
@@ -324,7 +282,6 @@ def execute(stats, stop):
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     
     elif stats.t.current == stats.t.completion_B: #completamento in B
-        print(f"COMPLETION_B | current: {stats.t.current:.4f}")
         jid, job = min(stats.B_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.B_jobs[jid] #rimuovo il job da B
         
@@ -337,15 +294,16 @@ def execute(stats, stop):
         stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di B
 
     elif stats.t.current == stats.t.completion_P: #completamento in P
-        print(f"COMPLETION_P | current: {stats.t.current:.4f}")
-        # if return_times_P:
-        return_times_P.remove(stats.t.current) #rimuovo il tempo di ritorno in A dalla lista
+        jid, job = min(stats.P_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
+        del stats.P_jobs[jid] #rimuovo il job da P
+
         stats.index_P += 1
         jid = stats.next_job_id  
         stats.next_job_id  += 1
         stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)} #aggiungo il job a A
 
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
+        stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current) # aggiorniamo il prossimo completamento di P
 
         
 def return_stats(stats, horizon, s):
