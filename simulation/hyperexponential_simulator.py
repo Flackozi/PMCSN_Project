@@ -264,6 +264,8 @@ def execute(stats, stop):
     stats.t.current = stats.t.next #avanziamo l'orologio
 
     if stats.t.current == stats.t.arrival: 
+        # print(f"ARRIVAL | current: {stats.t.current:.4f}")
+
         #arrivo esterno in A
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -282,6 +284,7 @@ def execute(stats, stop):
         stats.job_arrived += 1 #incrementiamo il contatore dei job arrivati
 
     elif stats.t.current == stats.t.completion_A: #completamento in A
+        # print(f"COMPLETION_A | current: {stats.t.current:.4f}")
         jid, job = min(stats.A_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.A_jobs[jid] #rimuovo il job da A
 
@@ -311,6 +314,7 @@ def execute(stats, stop):
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     
     elif stats.t.current == stats.t.completion_B: #completamento in B
+        # print(f"COMPLETION_B | current: {stats.t.current:.4f}")
         jid, job = min(stats.B_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.B_jobs[jid] #rimuovo il job da B
         
@@ -323,6 +327,7 @@ def execute(stats, stop):
         stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di B
 
     elif stats.t.current == stats.t.completion_P: #completamento in P
+        # print(f"COMPLETION_P | current: {stats.t.current:.4f}")
         jid, job = min(stats.P_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.P_jobs[jid] #rimuovo il job da P
 
