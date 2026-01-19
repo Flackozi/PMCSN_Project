@@ -2,7 +2,7 @@ import csv
 import statistics
 import matplotlib.pyplot as plt
 import os
-
+from utils.sim_utils import *
 file_path = "simulation/../output/csv/"
 
 header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_avg_num_job', 'A_throughput' ,'B_avg_resp',
@@ -215,3 +215,53 @@ def plot_num_jobs_t(num_jobs_times, sim_type, name, ylabel="Number of jobs"):
     output_path = os.path.join(output_dir, f'{name}.png')
     plt.savefig(output_path)
     plt.close()
+
+
+def print_simulation_stats(stats, type):
+    """
+    Stampa le statistiche della simulazione per il progetto PMCSN.
+    stats: oggetto contenente le metriche raccolte
+    type: "replications" o "batch"
+    """
+    if type == "replications":
+        print(f"\nStats after {stats.replications} replications:")
+    elif type == "batch":
+        print(f"\nStats for batch analysis:")
+
+    # Node A
+    print(f"\nNode A - Average wait time: {statistics.mean(stats.A_avg_wait):.6f} ± {calculate_confidence_interval(stats.A_avg_wait):.6f}")
+    print(f"Node A - Average service time: {statistics.mean(stats.A_avg_serv):.6f} ± {calculate_confidence_interval(stats.A_avg_serv):.6f}")
+    print(f"Node A - Average response time: {statistics.mean(stats.A_avg_resp):.6f} ± {calculate_confidence_interval(stats.A_avg_resp):.6f}")
+    print(f"Node A - Utilization: {statistics.mean(stats.A_utilization):.6f} ± {calculate_confidence_interval(stats.A_utilization):.6f}")
+    print(f"Node A - Average number in node: {statistics.mean(stats.A_avg_num_job):.6f} ± {calculate_confidence_interval(stats.A_avg_num_job):.6f}")
+    print(f"Node A - Throughput: {statistics.mean(stats.A_throughput):.6f} ± {calculate_confidence_interval(stats.A_throughput):.6f}")
+
+    # Node B
+    print(f"\nNode B - Average wait time: {statistics.mean(stats.B_avg_wait):.6f} ± {calculate_confidence_interval(stats.B_avg_wait):.6f}")
+    print(f"Node B - Average service time: {statistics.mean(stats.B_avg_serv):.6f} ± {calculate_confidence_interval(stats.B_avg_serv):.6f}")
+    print(f"Node B - Average response time: {statistics.mean(stats.B_avg_resp):.6f} ± {calculate_confidence_interval(stats.B_avg_resp):.6f}")
+    print(f"Node B - Utilization: {statistics.mean(stats.B_utilization):.6f} ± {calculate_confidence_interval(stats.B_utilization):.6f}")
+    print(f"Node B - Average number in node: {statistics.mean(stats.B_avg_num_job):.6f} ± {calculate_confidence_interval(stats.B_avg_num_job):.6f}")
+    print(f"Node B - Throughput: {statistics.mean(stats.B_throughput):.6f} ± {calculate_confidence_interval(stats.B_throughput):.6f}")
+
+    # Node P
+    print(f"\nNode P - Average wait time: {statistics.mean(stats.P_avg_wait):.6f} ± {calculate_confidence_interval(stats.P_avg_wait):.6f}")
+    print(f"Node P - Average service time: {statistics.mean(stats.P_avg_serv):.6f} ± {calculate_confidence_interval(stats.P_avg_serv):.6f}")
+    print(f"Node P - Average response time: {statistics.mean(stats.P_avg_resp):.6f} ± {calculate_confidence_interval(stats.P_avg_resp):.6f}")
+    print(f"Node P - Utilization: {statistics.mean(stats.P_utilization):.6f} ± {calculate_confidence_interval(stats.P_utilization):.6f}")
+    print(f"Node P - Average number in node: {statistics.mean(stats.P_avg_num_job):.6f} ± {calculate_confidence_interval(stats.P_avg_num_job):.6f}")
+    print(f"Node P - Throughput: {statistics.mean(stats.P_throughput):.6f} ± {calculate_confidence_interval(stats.P_throughput):.6f}")
+
+    # Sub-nodes A1, A2, A3
+    for i in [1, 2, 3]:
+        print(f"\nNode A{i} - Average wait time: {statistics.mean(getattr(stats, f'A{i}_avg_wait')):.6f} ± {calculate_confidence_interval(getattr(stats, f'A{i}_avg_wait')):.6f}")
+        print(f"Node A{i} - Average service time: {statistics.mean(getattr(stats, f'A{i}_avg_serv')):.6f} ± {calculate_confidence_interval(getattr(stats, f'A{i}_avg_serv')):.6f}")
+        print(f"Node A{i} - Average response time: {statistics.mean(getattr(stats, f'A{i}_avg_resp')):.6f} ± {calculate_confidence_interval(getattr(stats, f'A{i}_avg_resp')):.6f}")
+
+    # System metrics
+    print(f"\nSystem - Average response time: {statistics.mean(stats.system_avg_response_time):.6f} ± {calculate_confidence_interval(stats.system_avg_response_time):.6f}")
+    print(f"System - Average service time: {statistics.mean(stats.system_avg_service_time):.6f} ± {calculate_confidence_interval(stats.system_avg_service_time):.6f}")
+    print(f"System - Average wait time: {statistics.mean(stats.system_avg_wait):.6f} ± {calculate_confidence_interval(stats.system_avg_wait):.6f}")
+    print(f"System - Utilization: {statistics.mean(stats.system_utilization):.6f} ± {calculate_confidence_interval(stats.system_utilization):.6f}")
+    print(f"System - Average number of jobs: {statistics.mean(stats.system_avg_num_job):.6f} ± {calculate_confidence_interval(stats.system_avg_num_job):.6f}")
+    print(f"System - Throughput: {statistics.mean(stats.system_throughput):.6f} ± {calculate_confidence_interval(stats.system_throughput):.6f}")

@@ -193,6 +193,9 @@ def hyper_infinite_simulation(stop):
         # reset stats for next replication
         stats.reset_infinite()
 
+    remove_batch(batch_stats, 25)
+
+
     if PRINT_PLOT_BATCH == 1:
         sim_type = "hyperexponential_model"
         plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
@@ -210,7 +213,6 @@ def hyper_infinite_simulation(stop):
         plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
         plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
 
-    remove_batch(batch_stats, 25)
     return batch_stats
 
 def execute(stats, stop):

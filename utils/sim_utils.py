@@ -116,24 +116,28 @@ def append_stats(replicationStats, results, stats):
     replicationStats.system_avg_service_time.append(results['system_avg_service_time'])
     replicationStats.system_avg_num_job.append(results['system_avg_num_job'])
     replicationStats.system_utilization.append(results['system_utilization'])
+    replicationStats.system_throughput.append(results['system_throughput'])
 
     replicationStats.A_avg_wait.append(results['A_avg_wait'])
     replicationStats.A_avg_resp.append(results['A_avg_resp'])
     replicationStats.A_avg_serv.append(results['A_avg_serv'])
     replicationStats.A_utilization.append(results['A_utilization'])
     replicationStats.A_avg_num_job.append(results['A_avg_num_job'])
+    replicationStats.A_throughput.append(results['A_throughput'])
 
     replicationStats.B_avg_wait.append(results['B_avg_wait'])
     replicationStats.B_avg_serv.append(results['B_avg_serv'])
     replicationStats.B_avg_resp.append(results['B_avg_resp'])
     replicationStats.B_utilization.append(results['B_utilization'])
     replicationStats.B_avg_num_job.append(results['B_avg_num_job'])
+    replicationStats.B_throughput.append(results['B_throughput'])
 
     replicationStats.P_avg_wait.append(results['P_avg_wait'])
     replicationStats.P_avg_serv.append(results['P_avg_serv'])
     replicationStats.P_avg_resp.append(results['P_avg_resp'])
     replicationStats.P_utilization.append(results['P_utilization'])
     replicationStats.P_avg_num_job.append(results['P_avg_num_job'])
+    replicationStats.P_throughput.append(results['P_throughput'])
 
     replicationStats.A1_avg_wait.append(results['A1_avg_wait'])
     replicationStats.A1_avg_resp.append(results['A1_avg_resp'])
@@ -161,7 +165,24 @@ def append_stats(replicationStats, results, stats):
     replicationStats.A2_resp_interval.append(stats.A2_resp_times)
     replicationStats.A3_resp_interval.append(stats.A3_resp_times)
 
+def calculate_confidence_interval(data):
+    n = len(data)
+    if n == 0:
+        return 0.0, 0.0  # no data
 
+    if n > 1:
+        standard_deviation = statistics.stdev(data)
+    else:
+        standard_deviation = 0
+        return standard_deviation
+
+    # get t* for interval confidence
+    t_star = rvms.idfStudent(n - 1, 1 - vs.ALPHA / 2)
+
+    # calculate confidence interval
+    margin_of_error = t_star * standard_deviation / math.sqrt(n - 1)
+
+    return margin_of_error
 
 def lambda_scaling(t: float) -> float:
     """

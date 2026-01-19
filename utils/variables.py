@@ -9,6 +9,7 @@ INFINITY = float('inf')
 
 LAMBDA = 1.2 # arrival rate
 
+ALPHA = 0.05 # 95% confidence
 
 
 # LAMBDA_SIN_AMP = 0.3      # ampiezza del seno
