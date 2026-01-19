@@ -104,7 +104,7 @@ def start_infinite_simulation():
         plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
         plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
         plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
-        plot_batch
+        plot_batch(batch_stats.P_avg_resp, sim_type, "center_P")
         plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
         plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
@@ -154,6 +154,7 @@ def start_base_variabile_sim():
             # analisi del transitorio
             plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
             plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
             plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
             plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
             plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
@@ -161,6 +162,7 @@ def start_base_variabile_sim():
             # plot dei tempi di risposta medi per replica
             plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
             plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
             plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
             plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
             plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
@@ -268,6 +270,7 @@ def start_2fa_finite_simulation():
             # analisi del transitorio
             plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
             plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
             plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
             plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
             plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
@@ -276,6 +279,7 @@ def start_2fa_finite_simulation():
             # plot dei tempi di risposta medi per replica
             plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
             plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
             plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
             plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
             plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
@@ -301,6 +305,7 @@ def start_2fa_infinite_simulation():
         plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
         plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
         plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
+        plot_batch(batch_stats.P_avg_resp, sim_type, "center_P")
         plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
         plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
