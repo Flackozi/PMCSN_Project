@@ -45,7 +45,7 @@ SEED = 123456789
 
 REPLICATIONS = 50
 
-TRANSIENT_ANALYSIS = 1  # 1 per fare l'analisi del transitorio, 0 per simulazioni finite/infinite normali
+TRANSIENT_ANALYSIS = 0  # 1 per fare l'analisi del transitorio, 0 per simulazioni finite/infinite normali
 
 PRINT_PLOT_BATCH = 1
 

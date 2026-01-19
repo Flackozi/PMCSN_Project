@@ -20,6 +20,7 @@ def write_file(results, file_name):
         write.writerow(results)
 
 def clear_file(file_name):
+    file_path = "simulation/../output/csv/"
     path = file_path + file_name
     with open(path, "w", newline = '', encoding='utf-8') as csvfile:
         write = csv.DictWriter(csvfile, fieldnames=header)

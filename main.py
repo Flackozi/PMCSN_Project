@@ -9,17 +9,27 @@ import simulation.simulator_base_variabile as sbv
 from simulation.double_factor_simulation import *
 from simulation.hyperexponential_simulator import *
 
-def start_simulation():
+def start_base_simulation():
     if vs.SIM_TYPE == FINITE:
-        res = start_finite_sim()
+        start_finite_simulation()
     elif vs.SIM_TYPE == INFINITE:
-        res = start_infinite_sim()
+        start_infinite_simulation()
     else:
         print("Type not valid")
         exit(1)
-    return res
 
-def start_finite_sim():
+
+def start_2fa_simulation():
+    if vs.SIM_TYPE == FINITE:
+        start_2fa_finite_simulation()
+    elif vs.SIM_TYPE == INFINITE:
+        start_2fa_infinite_simulation()
+    else:
+        print("Type not valid")
+        exit(1)
+
+
+def start_finite_simulation():
     replicationStats = ReplicationStats()
     # if vs.MODEL == BASE:
     #     file_name = "base_model_finite_results.csv"
@@ -72,7 +82,7 @@ def start_finite_sim():
         plot_num_jobs_t(stats.NB_times,   sim_type, f"NB",   ylabel="N B")
         plot_num_jobs_t(stats.NP_times,   sim_type, f"NP",   ylabel="N P")
 
-def start_infinite_sim():
+def start_infinite_simulation():
     # replicationStats = ReplicationStats()
     if vs.MODEL == BASE:
         file_name = "base_model_infinite_results.csv"
@@ -81,8 +91,31 @@ def start_infinite_sim():
     stop = STOP_INFINITE
 
     clear_file(file_name)
-    batch_stats = infinite_simulation(stop)
+    rep_stats, batch_stats, stats = infinite_simulation(stop)
     print("End infinite simulation")
+
+    #salvo tutte le statistiche della replica in un file
+
+    for res in rep_stats:
+        write_file(res, "base_model_infinite_results.csv")
+
+    if PRINT_PLOT_BATCH == 1:
+        sim_type = "base_model"
+        plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
+        plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
+        plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
+        plot_batch
+        plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
+        plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
+        plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
+        
+        sim_type = "infinite_simulation/base_model"
+        plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
+        plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
+        plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
+        plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
+
+    remove_batch(batch_stats, 25)
 
     # type = "batch"
     # # print_simulation_stats(batch_stats, type, type)
@@ -114,15 +147,17 @@ def start_base_variabile_sim():
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
 
+        sim_type = "base_variabile_model"
+
+
         if vs.TRANSIENT_ANALYSIS == 1:
             # analisi del transitorio
-            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", "variable_lambda")
-            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", "variable_lambda")
-            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", "variable_lambda")
-            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", "variable_lambda")
-            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", "variable_lambda")
+            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
         else:
-            sim_type = "finite_simulation"
             # plot dei tempi di risposta medi per replica
             plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
             plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
@@ -204,19 +239,18 @@ def start_scaling_sim():
         traceback.print_exc()
 
 
-def start_2fa_simulation():
+def start_2fa_finite_simulation():
     replicationStats = ReplicationStats()
     print("FINITE 2FA BASE SIMULATION")
 
     if vs.TRANSIENT_ANALYSIS == 1:
         stop = STOP_ANALYSIS
         vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
-        file_name = "scaling_model_transient_analysis_results.csv"
+        file_name = "2fa_model_transient_analysis_results.csv"
     else:
         stop = STOP
         vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
-        file_name = "scaling_model_finite_results.csv"
-
+        file_name = "2fa_model_finite_results.csv"
     clear_file(file_name)
     for i in range(vs.REPLICATIONS):
 
@@ -245,6 +279,37 @@ def start_2fa_simulation():
             plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
 
     exit(1)
+
+
+def start_2fa_infinite_simulation():
+    if vs.MODEL == BASE:
+        file_name = "2fa_model_infinite_results.csv"
+        print("INFINITE 2FA SIMULATION")
+
+    clear_file(file_name)
+    rep_stats, batch_stats, stats = infinite_2fa_simulation(STOP_INFINITE)
+    print("End infinite 2fa simulation")
+
+    for res in rep_stats:
+        write_file(res, "2fa_model_infinite_results.csv")
+
+
+    if PRINT_PLOT_BATCH == 1:
+        sim_type = "2fa_model"
+        plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
+        plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
+        plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
+        plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
+        plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
+        plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
+
+        sim_type = "infinite_simulation/2fa_model"
+        plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
+        plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
+        plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
+        plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
+
+    remove_batch(batch_stats, 25)
 
 def start_hyperexponential_simulation():
     if vs.SIM_TYPE == INFINITE:
@@ -311,7 +376,7 @@ def start():
         choice = int(input("Select the type: "))
         if choice == 1:
             get_simulation(choice)
-            start_simulation()
+            start_base_simulation()
         elif choice == 2:
             get_simulation(choice)
             start_2fa_simulation()

@@ -108,12 +108,14 @@ def infinite_simulation(stop):
         # medie di attesa e di permanenza (cumulative fino al checkpoint)
         A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
         B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
+        P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
         # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
         # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
         
         # tempo di risposta del centro = area.node / completamenti
         A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
         B_resp = (stats.area_B.node / comp_B) if comp_B > 0 else 0.0
+        P_resp = (stats.area_P.node / comp_P) if comp_P > 0 else 0.0
 
         A1_wait = (stats.area_A1.node - stats.area_A1.service) / stats.index_A1 if stats.index_A1 > 0 else 0.0
         A2_wait = (stats.area_A2.node - stats.area_A2.service) / stats.index_A2 if stats.index_A2 > 0 else 0.0
@@ -125,12 +127,14 @@ def infinite_simulation(stop):
 
         stats.A_wait_times.append((stats.t.current, A_wait))
         stats.B_wait_times.append((stats.t.current, B_wait))
+        stats.P_wait_times.append((stats.t.current, P_wait))
         stats.A1_wait_times.append((stats.t.current, A1_wait))
         stats.A2_wait_times.append((stats.t.current, A2_wait))
         stats.A3_wait_times.append((stats.t.current, A3_wait))
 
         stats.A_resp_times.append((stats.t.current, A_resp))
         stats.B_resp_times.append((stats.t.current, B_resp))
+        stats.P_resp_times.append((stats.t.current, P_resp))
         stats.A1_resp_times.append((stats.t.current, A1_resp))
         stats.A2_resp_times.append((stats.t.current, A2_resp))
         stats.A3_resp_times.append((stats.t.current, A3_resp))
@@ -311,7 +315,7 @@ def return_stats(stats, horizon, s):
     # medie finali
     comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
     comp_B = stats.index_B
-    
+    comp_P = stats.index_P
 
     system_avg_response = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
     system_avg_service = (stats.area_A.service + stats.area_B.service + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
@@ -333,6 +337,13 @@ def return_stats(stats, horizon, s):
         "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
         "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
         "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
+
+        # statistiche centro P
+        "P_avg_resp": stats.area_P.node / comp_P if comp_P > 0 else 0.0,
+        "P_avg_wait": stats.area_P.queue / comp_P if comp_P > 0 else 0.0,
+        "P_avg_serv": stats.area_P.service / comp_P if comp_P > 0 else 0.0,
+        "P_utilization": stats.area_P.service / horizon if horizon > 0 else 0.0,
+        "P_avg_num_job": stats.area_P.node / horizon if horizon > 0 else 0.0,
 
         # statistiche job di classe 1 su A
         "A1_avg_resp": stats.area_A1.node / stats.index_A1 if stats.index_A1 > 0 else 0.0,

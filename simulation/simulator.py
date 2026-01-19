@@ -80,6 +80,8 @@ def finite_simulation(stop):
 
 def infinite_simulation(stop): 
 
+    rep_stats = []
+
     s = getSeed()
     start_time = 0
 
@@ -144,34 +146,36 @@ def infinite_simulation(stop):
         stats.A2_resp_times.append((stats.t.current, A2_resp))
         stats.A3_resp_times.append((stats.t.current, A3_resp))
 
+        # salvo tutte le statistiche della replica in una lista da ritornare poiù avanti
 
-        # collect replication statistics
-        rep_stats = return_stats(stats, stop_time, s)
-        write_file(rep_stats, "base_model_infinite_results.csv")
-        append_stats(batch_stats, rep_stats, stats)
+        results = return_stats(stats, stop_time, s)
 
+
+        append_stats(batch_stats, results, stats)
+
+        rep_stats.append(results)
 
         # reset stats for next replication
         stats.reset_infinite()
 
-    if PRINT_PLOT_BATCH == 1:
-        sim_type = "base_model"
-        plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
-        plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
-        plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
-        plot_batch
-        plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
-        plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
-        plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
+    # if PRINT_PLOT_BATCH == 1:
+    #     sim_type = "base_model"
+    #     plot_batch(batch_stats.system_avg_response_time, sim_type, "system")
+    #     plot_batch(batch_stats.A_avg_resp, sim_type, "center_A")
+    #     plot_batch(batch_stats.B_avg_resp, sim_type, "center_B")
+    #     plot_batch
+    #     plot_batch(batch_stats.A1_avg_resp, sim_type, "class_1_A")
+    #     plot_batch(batch_stats.A2_avg_resp, sim_type, "class_2_A")
+    #     plot_batch(batch_stats.A3_avg_resp, sim_type, "class_3_A")
         
-        sim_type = "infinite_simulation/base_model"
-        plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
-        plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
-        plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
-        plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
+    #     sim_type = "infinite_simulation/base_model"
+    #     plot_num_jobs_t(batch_stats.A_avg_num_job, sim_type, "num_jobs_A", ylabel="Average number of jobs in A")
+    #     plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
+    #     plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
+    #     plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
 
-    remove_batch(batch_stats, 25)
-    return batch_stats
+    # remove_batch(batch_stats, 25)
+    return rep_stats, batch_stats, stats
 
     
 def _check_areas_finite(stats, where):
