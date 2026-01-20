@@ -142,7 +142,7 @@ def infinite_simulation(stop):
 
         # collect replication statistics
         rep_stats = return_stats(stats, stop_time, s)
-        write_file(rep_stats, "base_model_infinite_results.csv")
+        write_file(rep_stats, "base_variable_model_infinite_results.csv")
         append_stats(batch_stats, rep_stats, stats)
 
        
@@ -150,6 +150,8 @@ def infinite_simulation(stop):
 
         # reset stats for next replication
         stats.reset_infinite()
+
+    remove_batch(batch_stats, 25)
 
     if PRINT_PLOT_BATCH == 1:
         plot_batch(batch_stats.system_avg_response_time, "standard", "system")
@@ -159,7 +161,6 @@ def infinite_simulation(stop):
         plot_batch(batch_stats.A2_avg_resp, "standard", "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, "standard", "class_3_A")
 
-    remove_batch(batch_stats, 25)
     return batch_stats
 
     

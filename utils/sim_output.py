@@ -223,11 +223,7 @@ def print_simulation_stats(stats, type):
     stats: oggetto contenente le metriche raccolte
     type: "replications" o "batch"
     """
-    if type == "replications":
-        print(f"\nStats after {stats.replications} replications:")
-    elif type == "batch":
-        print(f"\nStats for batch analysis:")
-
+    
     # Node A
     print(f"\nNode A - Average wait time: {statistics.mean(stats.A_avg_wait):.6f} ± {calculate_confidence_interval(stats.A_avg_wait):.6f}")
     print(f"Node A - Average service time: {statistics.mean(stats.A_avg_serv):.6f} ± {calculate_confidence_interval(stats.A_avg_serv):.6f}")

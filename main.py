@@ -268,26 +268,26 @@ def start_2fa_finite_simulation():
         write_file(results, file_name)
         append_stats(replicationStats, results, stats)
 
-        sim_type = "2fa_model"
+    sim_type = "2fa_model"
 
-        if vs.TRANSIENT_ANALYSIS == 1:
-            # analisi del transitorio
-            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
-            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
-            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
-            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
-            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
-            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
-        else:
-            
-            # plot dei tempi di risposta medi per replica
-            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
-            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
-            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
-            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
-            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
-            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
-            print_simulation_stats(replicationStats, "replications")
+    if vs.TRANSIENT_ANALYSIS == 1:
+        # analisi del transitorio
+        plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+        plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+        plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
+        plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+        plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+        plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+    else:
+        
+        # plot dei tempi di risposta medi per replica
+        plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+        plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+        plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
+        plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+        plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+        plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+        print_simulation_stats(replicationStats, "replications")
 
     exit(1)
 
