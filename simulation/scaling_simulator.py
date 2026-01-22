@@ -445,6 +445,7 @@ def return_stats(stats, horizon, s):
         "A_utilization": stats.area_A.service / horizon if horizon > 0 else 0.0,
         "A_avg_num_job": stats.area_A.node / horizon if horizon > 0 else 0.0,
         "A_avg_serv": stats.area_A.service / comp_A if comp_A > 0 else 0.0,
+        "A_throughput": comp_A / horizon if horizon > 0 else 0.0,
 
         # statistiche centro B
         "B_avg_resp": stats.area_B.node / comp_B if comp_B > 0 else 0.0,
@@ -452,7 +453,8 @@ def return_stats(stats, horizon, s):
         "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
         "B_utilization": B_util,
         # "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
-        "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
+        "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,  
+        "B_throughput": comp_B / horizon if horizon > 0 else 0.0, 
 
         # statistiche centro P
         "P_avg_resp": stats.area_P.node / comp_P if comp_P > 0 else 0.0,
@@ -484,6 +486,7 @@ def return_stats(stats, horizon, s):
         'system_utilization': max (stats.area_A.service/ horizon, stats.area_B.service / horizon,stats.area_P.service/ horizon) if horizon > 0 else 0.0,
         'system_avg_num_job': (stats.area_A.node + stats.area_B.node + stats.area_P.node) / horizon if horizon > 0 else 0.0,
         'system_avg_wait': system_avg_wait,
+        'system_throughput': stats.index_A3 / horizon if horizon > 0 else 0.0,
 
         "job_arrived": stats.job_arrived,
         "completions_A1": stats.index_A1,

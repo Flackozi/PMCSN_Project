@@ -160,7 +160,6 @@ def infinite_simulation(stop):
         plot_batch(batch_stats.A1_avg_resp, "standard", "class_1_A")
         plot_batch(batch_stats.A2_avg_resp, "standard", "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, "standard", "class_3_A")
- 
     return batch_stats
 
     
@@ -221,7 +220,7 @@ def execute(stats, stop):
         for job in stats.A_jobs.values():
             job["rem"] -= delta
 
-    # --- B: aggiornamento aree e servizio (PS multiserver) ---
+    # --- B: aggiornamento aree e servizio (PS) ---
     if stats.B_jobs:
         nB = len(stats.B_jobs)            
         stats.area_B.node += dt * nB
@@ -230,7 +229,7 @@ def execute(stats, stop):
         for job in stats.B_jobs.values():
             job["rem"] -= delta
 
-    # --- P: aggiornamento aree e servizio (PS multiserver) ---
+    # --- P: aggiornamento aree e servizio (PS) ---
     if stats.P_jobs:
         nP = len(stats.P_jobs)
         stats.area_P.node += dt * nP
