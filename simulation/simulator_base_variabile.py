@@ -142,7 +142,7 @@ def infinite_simulation(stop):
 
         # collect replication statistics
         rep_stats = return_stats(stats, stop_time, s)
-        write_file(rep_stats, "base_model_infinite_results.csv")
+        write_file(rep_stats, "base_variable_model_infinite_results.csv")
         append_stats(batch_stats, rep_stats, stats)
 
        
@@ -151,6 +151,8 @@ def infinite_simulation(stop):
         # reset stats for next replication
         stats.reset_infinite()
 
+    remove_batch(batch_stats, 25)
+
     if PRINT_PLOT_BATCH == 1:
         plot_batch(batch_stats.system_avg_response_time, "standard", "system")
         plot_batch(batch_stats.A_avg_resp, "standard", "center_A")
@@ -158,8 +160,7 @@ def infinite_simulation(stop):
         plot_batch(batch_stats.A1_avg_resp, "standard", "class_1_A")
         plot_batch(batch_stats.A2_avg_resp, "standard", "class_2_A")
         plot_batch(batch_stats.A3_avg_resp, "standard", "class_3_A")
-
-    remove_batch(batch_stats, 25)
+ 
     return batch_stats
 
     
@@ -330,20 +331,23 @@ def return_stats(stats, horizon, s):
         "A_utilization": stats.area_A.service / horizon if horizon > 0 else 0.0,
         "A_avg_num_job": stats.area_A.node / horizon if horizon > 0 else 0.0,
         "A_avg_serv": stats.area_A.service / comp_A if comp_A > 0 else 0.0,
+        "A_throughput": comp_A / horizon if horizon > 0 else 0.0,
 
         # statistiche centro B
         "B_avg_resp": stats.area_B.node / comp_B if comp_B > 0 else 0.0,
         "B_avg_wait": stats.area_B.queue / comp_B if comp_B > 0 else 0.0,
-        "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
         "B_utilization": stats.area_B.service / horizon if horizon > 0 else 0.0,
-        "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,   
+        "B_avg_num_job": stats.area_B.node / horizon if horizon > 0 else 0.0,
+        "B_avg_serv": stats.area_B.service / comp_B if comp_B > 0 else 0.0,
+        "B_throughput": comp_B / horizon if horizon > 0 else 0.0,
 
         # statistiche centro P
         "P_avg_resp": stats.area_P.node / comp_P if comp_P > 0 else 0.0,
         "P_avg_wait": stats.area_P.queue / comp_P if comp_P > 0 else 0.0,
-        "P_avg_serv": stats.area_P.service / comp_P if comp_P > 0 else 0.0,
         "P_utilization": stats.area_P.service / horizon if horizon > 0 else 0.0,
         "P_avg_num_job": stats.area_P.node / horizon if horizon > 0 else 0.0,
+        "P_avg_serv": stats.area_P.service / comp_P if comp_P > 0 else 0.0,
+        "P_throughput": comp_P / horizon if horizon > 0 else 0.0,
 
         # statistiche job di classe 1 su A
         "A1_avg_resp": stats.area_A1.node / stats.index_A1 if stats.index_A1 > 0 else 0.0,

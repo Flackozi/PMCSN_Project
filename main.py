@@ -131,27 +131,29 @@ def start_base_variabile_sim():
     """
     try:
         replicationStats = ReplicationStats()
-        file_name = "base_variabile_model_finite_results.csv"
-        print("FINITE BASE VARIABILE SIMULATION")
+        
+        print("FINITE BASE VARIABILE LAMBDA SIMULATION")
 
         if vs.TRANSIENT_ANALYSIS == 1:
+            file_name = "base_variabile_lambda_model_transient_analysis_results.csv"
             stop = STOP_ANALYSIS
             vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
         else:
+            file_name = "base_variabile_lambda_model_finite_results.csv"
             stop = STOP
             vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
 
         clear_file(file_name)
 
         for i in range(vs.REPLICATIONS):
-            print(f"start base variabile replication {i+1}")
+            print(f"start base variabile lambda replication {i+1}")
             results, stats = sbv.finite_simulation(stop)  # definita in simulator_base_variabile.py
 
-            print(f"end base variabile replication {i+1}")
+            print(f"end base variabile lambda replication {i+1}")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
 
-        sim_type = "base_variabile_model"
+        sim_type = "base_variabile_lambda_model"
 
 
         if vs.TRANSIENT_ANALYSIS == 1:
@@ -176,7 +178,7 @@ def start_base_variabile_sim():
         exit(1)
 
     except Exception as e:
-        print("Error during base variabile simulation:")
+        print("Error during base variabile lambda simulation:")
         traceback.print_exc()
 
 def start_scaling_sim():
@@ -268,26 +270,26 @@ def start_2fa_finite_simulation():
         write_file(results, file_name)
         append_stats(replicationStats, results, stats)
 
-        sim_type = "2fa_model"
+    sim_type = "2fa_model"
 
-        if vs.TRANSIENT_ANALYSIS == 1:
-            # analisi del transitorio
-            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
-            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
-            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
-            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
-            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
-            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
-        else:
-            
-            # plot dei tempi di risposta medi per replica
-            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
-            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
-            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
-            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
-            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
-            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
-            print_simulation_stats(replicationStats, "replications")
+    if vs.TRANSIENT_ANALYSIS == 1:
+        # analisi del transitorio
+        plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+        plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+        plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
+        plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+        plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+        plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+    else:
+        
+        # plot dei tempi di risposta medi per replica
+        plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+        plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+        plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
+        plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+        plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+        plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+        print_simulation_stats(replicationStats, "replications")
 
     exit(1)
 
