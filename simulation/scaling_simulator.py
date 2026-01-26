@@ -159,9 +159,6 @@ def execute(stats, stop):
 
     # --- ARRIVO ESTERNO IN A ---
     if stats.t.current == stats.t.arrival:
-        # print(f"ARRIVAL | current: {stats.t.current:.4f}")
-
-        
 
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -193,7 +190,6 @@ def execute(stats, stop):
 
     # --- COMPLETION IN A ---
     elif stats.t.current == stats.t.completion_A:
-        # print(f"COMPLETION_A | current: {stats.t.current:.4f}")
         jid, job = min(stats.A_jobs.items(), key=lambda x: x[1]["rem"])
         del stats.A_jobs[jid]
 
@@ -261,8 +257,6 @@ def execute(stats, stop):
 
     # --- COMPLETION IN B ---
     elif stats.t.current == stats.t.completion_B:
-        # print(f"COMPLETION_B | current: {stats.t.current:.4f}")
-
         jid, job = min(stats.B_jobs.items(), key=lambda x: x[1]["rem"])
         del stats.B_jobs[jid]
 
@@ -280,7 +274,6 @@ def execute(stats, stop):
 
     # --- COMPLETION IN P ---
     elif stats.t.current == stats.t.completion_P:
-        # print(f"COMPLETION_P | current: {stats.t.current:.4f}")
         jid, job = min(stats.P_jobs.items(), key=lambda x: x[1]["rem"])
         del stats.P_jobs[jid]
         stats.index_P += 1
@@ -294,8 +287,6 @@ def execute(stats, stop):
 
     # --- COMPLETION NELLO SPIKE ---
     elif stats.t.current == stats.t.completion_spike:
-        # print(f"COMPLETION_SPIKE | current: {stats.t.current:.4f}")
-
         jid, job = min(stats.spike_server.items(), key=lambda x: x[1]["rem"])
         del stats.spike_server[jid]
         if len(stats.spike_server) == 0:
@@ -334,7 +325,6 @@ def scaling_finite_simulation(stop):
 
     first_check = stats.t.current + vs.RHO_CHECK_INTERVAL
     stats.t.rho_check = first_check if first_check <= stop else INFINITY
-
 
     #per plot spike 
     stats.spike_active_times = [(stats.t.current, 0)]

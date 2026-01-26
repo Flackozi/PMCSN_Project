@@ -280,26 +280,3 @@ class ReplicationStats:
         self.A2_resp_interval = []     # Time series for A2
         self.A3_resp_interval = []     # Time series for A3
 
-
-        # # --- Batch Means (for infinite-run analysis) ---
-        # self.A_batch_means = []        # Average wait per batch (A)
-        # self.B_batch_means = []
-        # self.P_batch_means = []
-        # self.sys_batch_means = []
-
-    # # ----------------------------------------------------------------------
-    # # You could later add helper methods here, for example:
-    # # ----------------------------------------------------------------------
-
-    # def append_replica(self, results, stats):
-    #     """
-    #     Example method to append a single replica's metrics to the lists.
-    #     'results' would come from the simulation output (dict),
-    #     and 'stats' from the SimulationStats object.
-    #     """
-    #     self.A_wait_times.append(results['A_avg_wait'])
-    #     self.B_wait_times.append(results['B_avg_wait'])
-    #     self.P_delays.append(results['P_avg_delay'])
-    #     self.sys_delays.append(results['sys_avg_delay'])
-    #     self.seeds.append(results['seed'])
-

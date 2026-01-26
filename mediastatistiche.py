@@ -1,10 +1,10 @@
 import pandas as pd
 
-FILE = "output/base_model_infinite_results.csv"
+FILE = "output/csv/scaling_model_finite_results.csv"
 
 df = pd.read_csv(FILE)
 
-# 🔧 Rimuove spazi prima/dopo nei nomi delle colonne
+# Rimuove spazi prima/dopo nei nomi delle colonne
 df.columns = df.columns.str.strip()
 
 centers = {
@@ -21,6 +21,13 @@ centers = {
         "B_avg_serv",
         "B_utilization",
         "B_avg_num_job",
+    ],
+    "P": [
+        "P_avg_resp",
+        "P_avg_wait",
+        "P_avg_serv",
+        "P_utilization",
+        "P_avg_num_job",
     ],
     "SYSTEM": [
         "system_avg_response_time",

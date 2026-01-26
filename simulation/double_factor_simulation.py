@@ -12,9 +12,6 @@ import simulation.simulator as sim
 
 
 def finite_2fa_simulation(stop):
-    """
-    Runs a finite simulation with Two-Factor Authentication enabled.
-    """
 
     # Patch del servizio P
     sim.get_service_P = sim.get_service_P_2FA
@@ -34,9 +31,6 @@ def finite_2fa_simulation(stop):
     return results, stats
 
 def infinite_2fa_simulation(stop):
-    """
-    Runs an infinite simulation with Two-Factor Authentication enabled.
-    """
 
     # Patch del servizio P
     sim.get_service_P = sim.get_service_P_2FA

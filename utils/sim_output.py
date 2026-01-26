@@ -165,7 +165,6 @@ def plot_analysis(resp_times, seed, name, sim_type):
 
     plt.figure(figsize=(10, 6))
 
-    # Plot each run
     for run_index, response_times in enumerate(resp_times):
         times = [point[0] for point in response_times]
         avg_response_times = [point[1] for point in response_times]
@@ -254,7 +253,7 @@ def print_simulation_stats(stats, type):
         print(f"Node A{i} - Average service time: {statistics.mean(getattr(stats, f'A{i}_avg_serv')):.6f} ± {calculate_confidence_interval(getattr(stats, f'A{i}_avg_serv')):.6f}")
         print(f"Node A{i} - Average response time: {statistics.mean(getattr(stats, f'A{i}_avg_resp')):.6f} ± {calculate_confidence_interval(getattr(stats, f'A{i}_avg_resp')):.6f}")
 
-    # System metrics
+    # Metriche del sistema
     print(f"\nSystem - Average response time: {statistics.mean(stats.system_avg_response_time):.6f} ± {calculate_confidence_interval(stats.system_avg_response_time):.6f}")
     print(f"System - Average service time: {statistics.mean(stats.system_avg_service_time):.6f} ± {calculate_confidence_interval(stats.system_avg_service_time):.6f}")
     print(f"System - Average wait time: {statistics.mean(stats.system_avg_wait):.6f} ± {calculate_confidence_interval(stats.system_avg_wait):.6f}")
