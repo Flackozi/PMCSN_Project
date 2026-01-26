@@ -12,16 +12,6 @@ LAMBDA = 1.2 # arrival rate
 ALPHA = 0.05 # 95% confidence
 
 
-# LAMBDA_SIN_AMP = 0.3      # ampiezza del seno
-# LAMBDA_PERIOD = 60000     # periodo del seno
-
-# SPIKE_CENTER = 41000      # centro dello spike
-# SPIKE_SIGMA = 1000        # larghezza del picco
-
-# SPIKE_HEIGHT = 0.9        # altezza del picco
-# LAMBDA_MAX = LAMBDA + LAMBDA_SIN_AMP + SPIKE_HEIGHT      # valore massimo di lambda durante la simulazione  
-
-
 LAMBDA_SIN_AMP = 0.3     # sinusoide: 1.2 ± 0.3  -> range ~[0.9, 1.5]
 LAMBDA_PERIOD = 60000.0  # periodo della sinusoide
 

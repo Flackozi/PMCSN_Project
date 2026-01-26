@@ -131,27 +131,29 @@ def start_base_variabile_sim():
     """
     try:
         replicationStats = ReplicationStats()
-        file_name = "base_variabile_model_finite_results.csv"
-        print("FINITE BASE VARIABILE SIMULATION")
+        
+        print("FINITE BASE VARIABILE LAMBDA SIMULATION")
 
         if vs.TRANSIENT_ANALYSIS == 1:
+            file_name = "base_variabile_lambda_model_transient_analysis_results.csv"
             stop = STOP_ANALYSIS
             vs.REPLICATIONS = 10  # per l'analisi del transitorio facciamo meno repliche
         else:
+            file_name = "base_variabile_lambda_model_finite_results.csv"
             stop = STOP
             vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
 
         clear_file(file_name)
 
         for i in range(vs.REPLICATIONS):
-            print(f"start base variabile replication {i+1}")
+            print(f"start base variabile lambda replication {i+1}")
             results, stats = sbv.finite_simulation(stop)  # definita in simulator_base_variabile.py
 
-            print(f"end base variabile replication {i+1}")
+            print(f"end base variabile lambda replication {i+1}")
             write_file(results, file_name)
             append_stats(replicationStats, results, stats)
 
-        sim_type = "base_variabile_model"
+        sim_type = "base_variabile_lambda_model"
 
 
         if vs.TRANSIENT_ANALYSIS == 1:
@@ -176,7 +178,7 @@ def start_base_variabile_sim():
         exit(1)
 
     except Exception as e:
-        print("Error during base variabile simulation:")
+        print("Error during base variabile lambda simulation:")
         traceback.print_exc()
 
 def start_scaling_sim():

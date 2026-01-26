@@ -7,7 +7,7 @@ from utils.variables import *
 
 plantSeeds(SEED)
 
-time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint each 1000 sec
+time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint ogni 1000 sec
 current_checkpoint = 0
 
 def hyper_finite_simulation(stop):
@@ -19,7 +19,7 @@ def hyper_finite_simulation(stop):
     stats = SimulationStats()
     stats.reset(vs.START)
 
-    # schedule first external arrival
+    # schedula primo arrivo esterno
     stats.t.arrival = GetHyperArrival()
 
     record_num_jobs(stats)   # campione iniziale (t=START)
@@ -37,8 +37,6 @@ def hyper_finite_simulation(stop):
             A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
             B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
             P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
-            # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
-            # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
             
             # tempo di risposta del centro = area.node / completamenti
             A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
@@ -71,7 +69,6 @@ def hyper_finite_simulation(stop):
             
     stats.calculate_area_queue()  
 
-    # horizon = stats.t.current (last time)
     return return_stats(stats, stats.t.current, s), stats
 
 
@@ -153,8 +150,6 @@ def hyper_infinite_simulation(stop):
         A_wait = (stats.area_A.node - stats.area_A.service) / comp_A if comp_A > 0 else 0.0
         B_wait = (stats.area_B.node - stats.area_B.service) / comp_B if comp_B > 0 else 0.0
         P_wait = (stats.area_P.node - stats.area_P.service) / comp_P if comp_P > 0 else 0.0
-        # a P non c'è coda (è delay/think): il "tempo a P" coincide col servizio medio effettivo
-        # P_serv = (stats.area_P.service / comp_P) if comp_P > 0 else 0.0
         
         # tempo di risposta del centro = area.node / completamenti
         A_resp = (stats.area_A.node / comp_A) if comp_A > 0 else 0.0
@@ -183,14 +178,13 @@ def hyper_infinite_simulation(stop):
         stats.A2_resp_times.append((stats.t.current, A2_resp))
         stats.A3_resp_times.append((stats.t.current, A3_resp))
 
-
-        # collect replication statistics
+        # salviamo le statistiche della replica
         rep_stats = return_stats(stats, stop_time, s)
         write_file(rep_stats, "hyperexponential_model_infinite_results.csv")
         append_stats(batch_stats, rep_stats, stats)
 
 
-        # reset stats for next replication
+        # reset dello stato per la replica successiva
         stats.reset_infinite()
 
     remove_batch(batch_stats, 25)
@@ -226,7 +220,6 @@ def execute(stats, stop):
         stats.area_A.node += dt * nA #aggiorno area sotto la curva
         stats.area_A.service += dt
 
-        # _check_areas_finite(stats, "execute: dopo aggiornamento area A")
 
         #Per il calcolo delle statistiche per le singole classi in A
         kA1 = sum(1 for j in stats.A_jobs.values() if j["classe"] == 1)
@@ -266,8 +259,6 @@ def execute(stats, stop):
     stats.t.current = stats.t.next #avanziamo l'orologio
 
     if stats.t.current == stats.t.arrival: 
-        # print(f"ARRIVAL | current: {stats.t.current:.4f}")
-
         #arrivo esterno in A
         jid = stats.next_job_id
         stats.next_job_id += 1
@@ -286,7 +277,6 @@ def execute(stats, stop):
         stats.job_arrived += 1 #incrementiamo il contatore dei job arrivati
 
     elif stats.t.current == stats.t.completion_A: #completamento in A
-        # print(f"COMPLETION_A | current: {stats.t.current:.4f}")
         jid, job = min(stats.A_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.A_jobs[jid] #rimuovo il job da A
 
@@ -311,12 +301,9 @@ def execute(stats, stop):
             #job di classe 3, esce dal sistema
             stats.index_A3 += 1
 
-            # stats.job_times[jid]["departure"] = stats.t.current
-
         stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
     
     elif stats.t.current == stats.t.completion_B: #completamento in B
-        # print(f"COMPLETION_B | current: {stats.t.current:.4f}")
         jid, job = min(stats.B_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.B_jobs[jid] #rimuovo il job da B
         
@@ -329,7 +316,6 @@ def execute(stats, stop):
         stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di B
 
     elif stats.t.current == stats.t.completion_P: #completamento in P
-        # print(f"COMPLETION_P | current: {stats.t.current:.4f}")
         jid, job = min(stats.P_jobs.items(), key=lambda x: x[1]["rem"]) #prendo il job con il tempo di servizio rimanente più piccolo
         del stats.P_jobs[jid] #rimuovo il job da P
 
