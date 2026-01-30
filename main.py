@@ -82,7 +82,7 @@ def start_finite_simulation():
         plot_num_jobs_t(stats.NB_times,   sim_type, f"NB",   ylabel="N B")
         plot_num_jobs_t(stats.NP_times,   sim_type, f"NP",   ylabel="N P")
 
-        print_simulation_stats(replicationStats, "replications")
+        
 
 def start_infinite_simulation():
     # replicationStats = ReplicationStats()
@@ -119,6 +119,7 @@ def start_infinite_simulation():
         plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
         plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
 
+    print_simulation_stats(batch_stats, "replications")
 
 
     # type = "batch"
@@ -289,7 +290,7 @@ def start_2fa_finite_simulation():
         plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
         plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
         plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
-        print_simulation_stats(replicationStats, "replications")
+        
 
     exit(1)
 
@@ -323,8 +324,9 @@ def start_2fa_infinite_simulation():
         plot_num_jobs_t(batch_stats.B_avg_num_job, sim_type, "num_jobs_B", ylabel="Average number of jobs in B")
         plot_num_jobs_t(batch_stats.P_avg_num_job, sim_type, "num_jobs_P", ylabel="Average number of jobs in P")
         plot_num_jobs_t(batch_stats.system_avg_num_job, sim_type, "num_jobs_system", ylabel="Average number of jobs in system")
+        print_simulation_stats(batch_stats, "replications")
 
-    remove_batch(batch_stats, 25)
+    
 
 def start_hyperexponential_simulation():
     if vs.SIM_TYPE == INFINITE:

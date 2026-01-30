@@ -6,7 +6,7 @@ from libraries import rvms   # stessa libreria che usi nel progetto
 # =========================
 # PARAMETRI
 # =========================
-CSV_FILE = "output/csv/base_model_finite_results.csv"
+CSV_FILE = "output/csv/base_model_infinite_results.csv"
 METRIC = "system_avg_response_time"
 ALPHA = 0.05
 TARGET_RELATIVE_ERROR = 0.05  # 5%

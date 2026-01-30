@@ -114,6 +114,7 @@ class SimulationStats:
         self.NP_times = []      # (t, N_P)  = len(stats.P_jobs)
         self.Nsys_times = []    # (t, N_system)
 
+        self.raw_rt = []  # lista dei tempi di risposta grezzi (per calcolo CI esterno)
         
     def reset(self, start_time):
         """Resettiamo tutte le variabili per una nuova simulazione"""
