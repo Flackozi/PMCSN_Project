@@ -92,9 +92,9 @@ def HyperExponential(m):
     p = 0.7  # probabilità di scegliere la prima fase
     u = random()
     if u < p:
-        return - (m/1.4) * log(1.0 - random())  # prima fase con media m/(0.4*2)
+        return - (m/1.4) * log(1.0 - random())  # prima fase con media m/(0.7*2)
     else:
-        return - (m/0.6) * log(1.0 - random())  # seconda fase con media m/(0.6*2)
+        return - (m/0.6) * log(1.0 - random())  # seconda fase con media m/(0.3*2)
 
 def GetHyperArrival():
     """Generate the next arrival time for the first server with Hyper-Exponential."""
@@ -176,10 +176,10 @@ def calculate_confidence_interval(data):
         standard_deviation = 0
         return standard_deviation
 
-    # get t* for interval confidence
+    # prendo t* dalla distribuzione t di Student
     t_star = rvms.idfStudent(n - 1, 1 - vs.ALPHA / 2)
 
-    # calculate confidence interval
+    # calcolo intervallo di confidenza
     margin_of_error = t_star * standard_deviation / math.sqrt(n - 1)
 
     return margin_of_error

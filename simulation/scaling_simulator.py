@@ -242,7 +242,7 @@ def execute(stats, stop):
                 )
 
         elif job["classe"] == 2:
-            # job classe 2 → P (processor sharing)
+            
             jid_P = stats.next_job_id
             stats.next_job_id += 1
             stats.P_jobs[jid_P] = {"rem": get_service_P()}

@@ -31,9 +31,7 @@ def start_2fa_simulation():
 
 def start_finite_simulation():
     replicationStats = ReplicationStats()
-    # if vs.MODEL == BASE:
-    #     file_name = "base_model_finite_results.csv"
-    #     print("FINITE BASE SIMULATION")
+    
 
     if vs.TRANSIENT_ANALYSIS == 1:
         stop = STOP_ANALYSIS
@@ -121,9 +119,6 @@ def start_infinite_simulation():
 
     print_simulation_stats(batch_stats, "replications")
 
-
-    # type = "batch"
-    # # print_simulation_stats(batch_stats, type, type)
 
 def start_base_variabile_sim():
     """

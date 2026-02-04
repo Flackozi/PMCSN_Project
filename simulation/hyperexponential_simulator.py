@@ -28,7 +28,6 @@ def hyper_finite_simulation(stop):
     while (stats.t.arrival < stop) or (stats.A_jobs) or (stats.B_jobs) or (stats.P_jobs):
         execute(stats, stop)
         if current_checkpoint < len(time_checkpoints) and stats.t.current >= time_checkpoints[current_checkpoint]:
-            # snapshot
             comp_A = stats.index_A1 + stats.index_A2 + stats.index_A3  # tutti i depart da A
             comp_B = stats.index_B
             comp_P = stats.index_P

@@ -28,7 +28,7 @@ BASE = 1
 MODEL = BASE
 
 START = 0.0
-STOP = 100000  # terminal (close the door) time
+STOP = 100000 
 STOP_ANALYSIS = 300000
 STOP_INFINITE = float('inf')
 

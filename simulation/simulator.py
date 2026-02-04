@@ -148,12 +148,13 @@ def infinite_simulation(stop):
 
         rep_stats.append(results)
 
-        # reset stats for next replication
+        # reset per la replica successiva
         stats.reset_infinite()
 
     return rep_stats, batch_stats, stats
 
-    
+
+# Utility per il debug: controlla che le aree sotto la curva siano finite    
 def _check_areas_finite(stats, where):
     if not math.isfinite(getattr(stats.area_A, "node", float("nan"))):
         print(f"[ERROR] area_A.node non finito in: {where}")

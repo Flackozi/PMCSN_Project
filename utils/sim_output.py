@@ -12,6 +12,7 @@ header = ['seed', 'A_avg_resp', 'A_avg_wait', 'A_avg_serv', 'A_utilization', 'A_
           'system_avg_service_time', 'system_utilization', 'system_avg_wait', 'system_avg_num_job', 'system_throughput', 'job_arrived', 'completions_A1', 'completions_A2',
           'completions_A3', 'completions_B', 'completions_P', 'horizon']
 
+# Funzione per scrivere i risultati della simulazione su file CSV
 def write_file(results, file_name):
     file_path = "simulation/../output/csv/"
     path = file_path + file_name
@@ -19,6 +20,8 @@ def write_file(results, file_name):
         write = csv.DictWriter(csvfile, fieldnames=header)
         write.writerow(results)
 
+
+# Funzione per creare/azzerare il file CSV con l'header
 def clear_file(file_name):
     file_path = "simulation/../output/csv/"
     path = file_path + file_name
@@ -26,6 +29,7 @@ def clear_file(file_name):
         write = csv.DictWriter(csvfile, fieldnames=header)
         write.writeheader()
 
+# Funzione per plottare i tempi di attesa medi per batch in simulazioni infinite
 def plot_batch(wait_times, sim_type, name):
     output_dir = f"simulation/../output/plot/infinite_simulation/{sim_type}"
 
@@ -45,7 +49,7 @@ def plot_batch(wait_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
-
+# Funzione per plottare lambda(t) nel tempo
 def plot_lambda_t(lambda_times, sim_type, name):
     """
     lambda_times: lista di tuple (t, lambda)
@@ -67,7 +71,7 @@ def plot_lambda_t(lambda_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
-
+# Funzione per plottare il tempo di risposta medio del sistema nel tempo
 def plot_system_avg_response_time_t(system_resp_times, sim_type, name):
     """
     system_resp_times: lista di tuple (t, Rsys_running)
@@ -89,7 +93,7 @@ def plot_system_avg_response_time_t(system_resp_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
-
+# Funzione per plottare il numero di server attivi di layer 1 nel tempo
 def plot_active_servers_t(layer1_servers_times, sim_type, name):
     """
     layer1_servers_times: lista di tuple (t, n_servers)
@@ -111,7 +115,7 @@ def plot_active_servers_t(layer1_servers_times, sim_type, name):
     plt.savefig(output_path)
     plt.close()
 
-
+# Funzione per plottare lo stato di attività del server spike nel tempo
 def plot_spike_active_t(spike_active_times, sim_type, name):
     """
     spike_active_times: lista di tuple (t, 0/1)
@@ -192,6 +196,7 @@ def plot_num_jobs_t(num_jobs_times, sim_type, name, ylabel="Number of jobs"):
     if not num_jobs_times:
         return
 
+    # Determina se è una serie temporale o medie per batch
     if isinstance(num_jobs_times[0], tuple):
         # Time series
         x_values = [t for t, _ in num_jobs_times]
@@ -215,7 +220,7 @@ def plot_num_jobs_t(num_jobs_times, sim_type, name, ylabel="Number of jobs"):
     plt.savefig(output_path)
     plt.close()
 
-
+# Funzione per stampare le statistiche della simulazione
 def print_simulation_stats(stats, type):
     """
     Stampa le statistiche della simulazione per il progetto PMCSN.
