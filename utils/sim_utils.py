@@ -211,7 +211,6 @@ def GetArrivalScaling(current_time: float) -> float:
     lam = lambda_scaling(current_time)
     inter = Exponential(1.0 / lam)       # Exponential prende la MEDIA
 
-    # mantieniamo la coerenza con il tuo schema arrivalTemp cumulativo
     arrivalTempScaling += inter
     return arrivalTempScaling
     

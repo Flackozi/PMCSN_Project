@@ -223,7 +223,7 @@ def plot_num_jobs_t(num_jobs_times, sim_type, name, ylabel="Number of jobs"):
 # Funzione per stampare le statistiche della simulazione
 def print_simulation_stats(stats, type):
     """
-    Stampa le statistiche della simulazione per il progetto PMCSN.
+    Stampa le statistiche della simulazione.
     stats: oggetto contenente le metriche raccolte
     type: "replications" o "batch"
     """

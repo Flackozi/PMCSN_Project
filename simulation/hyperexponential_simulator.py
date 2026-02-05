@@ -80,7 +80,7 @@ def update_completion(jobs, current_time):
         if min_remaining < 0:
             print(f"[WARNING] min_remaining negativo: {min_remaining}")
             print(f"  Jobs: {jobs}")
-            min_remaining = 0  # Forza a 0 per evitare tempi nel passato
+            min_remaining = 0  # Forzo a 0 per evitare tempi nel passato
         
         n = len(jobs)
         return current_time + min_remaining * n

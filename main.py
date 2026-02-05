@@ -83,7 +83,7 @@ def start_finite_simulation():
         
 
 def start_infinite_simulation():
-    # replicationStats = ReplicationStats()
+    
     if vs.MODEL == BASE:
         file_name = "base_model_infinite_results.csv"
         print("INFINITE BASE SIMULATION")

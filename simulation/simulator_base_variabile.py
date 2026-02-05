@@ -8,7 +8,7 @@ from utils.variables import *
 
 plantSeeds(SEED)
 
-time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint each 1000 sec
+time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint ogni 1000 sec
 current_checkpoint = 0
 
 def finite_simulation(stop):
@@ -94,7 +94,7 @@ def update_completion(jobs, current_time):
         if min_remaining < 0:
             print(f"[WARNING] min_remaining negativo: {min_remaining}")
             print(f"  Jobs: {jobs}")
-            min_remaining = 0  # Forza a 0 per evitare tempi nel passato
+            min_remaining = 0  # Forzo a 0 per evitare tempi nel passato
         
         n = len(jobs)
         return current_time + min_remaining * n

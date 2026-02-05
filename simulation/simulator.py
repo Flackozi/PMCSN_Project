@@ -7,7 +7,7 @@ from utils.variables import *
 
 plantSeeds(SEED)
 
-time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint each 1000 sec
+time_checkpoints = list(range(0, STOP_ANALYSIS, 1000))  # Checkpoint ogni 1000 sec
 current_checkpoint = 0
 
 
@@ -139,7 +139,7 @@ def infinite_simulation(stop):
         stats.A2_resp_times.append((stats.t.current, A2_resp))
         stats.A3_resp_times.append((stats.t.current, A3_resp))
 
-        # salvo tutte le statistiche della replica in una lista da ritornare poiù avanti
+        # salvo tutte le statistiche della replica in una lista da ritornare più avanti
 
         results = return_stats(stats, stop_time, s)
 

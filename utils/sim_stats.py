@@ -40,9 +40,9 @@ class SimulationStats:
         # popolazioni (a livello di nodo)
         self.number_A  = 0  # = len(A_jobs)
         self.number_B  = 0  # = len(B_jobs)
-        self.number_P  = 0  # P in servizio/in coda (se la coda è modellata)
+        self.number_P  = 0  # = len(P_jobs)
 
-        # suddivisione delle visite in A (conteggi per split area e reporting)
+        # suddivisione delle visite in A 
         self.number_A1 = 0
         self.number_A2 = 0
         self.number_A3 = 0
@@ -106,7 +106,7 @@ class SimulationStats:
         # --- Serie temporali popolazione (per plot variabilità) ---
         self.NA_times = []      # (t, N_A)
         self.NB_times = []      # (t, N_B)
-        self.NP_times = []      # (t, N_P)  = len(stats.P_jobs)
+        self.NP_times = []      # (t, N_P)  
         self.Nsys_times = []    # (t, N_sistema)
 
         self.raw_rt = []  # lista dei tempi di risposta grezzi (per calcolo IC esterno)
