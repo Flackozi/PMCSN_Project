@@ -285,7 +285,7 @@ def start_2fa_finite_simulation():
         plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
         plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
         plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
-        
+
 
     exit(1)
 

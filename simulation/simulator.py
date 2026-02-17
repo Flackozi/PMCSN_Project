@@ -272,7 +272,7 @@ def execute(stats, stop):
             stats.next_job_id += 1
             stats.B_jobs[jid] = {"rem": get_service_B()} #aggiungo il job a B
             stats.index_A1 += 1 
-            stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di A
+            stats.t.completion_B = update_completion(stats.B_jobs, stats.t.current) # aggiorniamo il prossimo completamento di B
         elif job["classe"] == 2:
             #job di classe 2, va in P
             jid = stats.next_job_id  
@@ -322,7 +322,7 @@ def return_stats(stats, horizon, s):
     comp_P = stats.index_P
     
 
-    system_avg_response = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
+    system_avg_response = (stats.area_A.node + stats.area_B.node + stats.area_P.node) / stats.index_A3 if stats.index_A3 > 0 else 0.0
     system_avg_service = (stats.area_A.service + stats.area_B.service + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
     system_avg_wait = system_avg_response - system_avg_service
 
