@@ -265,3 +265,78 @@ def print_simulation_stats(stats, type):
     print(f"System - Utilization: {statistics.mean(stats.system_utilization):.6f} ± {calculate_confidence_interval(stats.system_utilization):.6f}")
     print(f"System - Average number of jobs: {statistics.mean(stats.system_avg_num_job):.6f} ± {calculate_confidence_interval(stats.system_avg_num_job):.6f}")
     print(f"System - Throughput: {statistics.mean(stats.system_throughput):.6f} ± {calculate_confidence_interval(stats.system_throughput):.6f}")
+
+
+# Grafico di validazione: confronta l'ampiezza dell'IC 95% dei tempi di risposta
+# tra lo scenario baseline e lo scenario realistico (lambda variabile + iper-esponenziale).
+# Legge le repliche già salvate nei CSV prodotti dalle rispettive simulazioni finite.
+def plot_ci_width_comparison(baseline_csv="base_model_finite_results.csv",
+                             realistic_csv="realistic_model_finite_results.csv",
+                             name="ci_width_baseline_vs_realistic"):
+    output_dir = "simulation/../output/plot/validation"
+    os.makedirs(output_dir, exist_ok=True)
+
+    centers = [
+        ("A",      "A_avg_resp"),
+        ("B",      "B_avg_resp"),
+        ("P",      "P_avg_resp"),
+        ("A1",     "A1_avg_resp"),
+        ("A2",     "A2_avg_resp"),
+        ("A3",     "A3_avg_resp"),
+        ("System", "system_avg_response_time"),
+    ]
+
+    def _read_column(path, col):
+        values = []
+        with open(path, "r", newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    values.append(float(row[col]))
+                except (KeyError, ValueError):
+                    continue
+        return values
+
+    base_path = file_path + baseline_csv
+    real_path = file_path + realistic_csv
+
+    if not os.path.exists(base_path) or not os.path.exists(real_path):
+        print(f"[plot_ci_width_comparison] CSV mancanti: {base_path} o {real_path}")
+        return
+
+    labels = []
+    base_widths = []
+    real_widths = []
+    for label, col in centers:
+        base_vals = _read_column(base_path, col)
+        real_vals = _read_column(real_path, col)
+        if not base_vals or not real_vals:
+            continue
+        labels.append(label)
+        base_widths.append(calculate_confidence_interval(base_vals))
+        real_widths.append(calculate_confidence_interval(real_vals))
+
+    x = list(range(len(labels)))
+    width = 0.38
+
+    plt.figure(figsize=(10, 6))
+    plt.bar([i - width/2 for i in x], base_widths, width,
+            label="Baseline (Poisson)", color="#4C78A8")
+    plt.bar([i + width/2 for i in x], real_widths, width,
+            label="Realistic (variable λ + hyperexponential)", color="#E45756")
+
+    plt.xticks(x, labels)
+    plt.ylabel("95% CI half-width on mean response time [s]")
+    plt.title("CI width comparison: baseline vs realistic scenario")
+    plt.legend()
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
+
+    for i, (b, r) in enumerate(zip(base_widths, real_widths)):
+        plt.text(i - width/2, b, f"{b:.3g}", ha="center", va="bottom", fontsize=8)
+        plt.text(i + width/2, r, f"{r:.3g}", ha="center", va="bottom", fontsize=8)
+
+    output_path = os.path.join(output_dir, f"{name}.png")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"[plot_ci_width_comparison] Salvato in {output_path}")

@@ -500,7 +500,47 @@ def start_realistic_simulation():
         traceback.print_exc()
 
 
+def start_ci_validation_comparison():
+    """
+    Entry point di validazione: esegue in sequenza la simulazione baseline
+    e quella realistica (lambda variabile + iper-esponenziale) e produce
+    un bar chart che confronta l'ampiezza dell'IC 95% dei tempi di risposta
+    per i vari centri nei due scenari.
+    """
+    try:
+        stop = STOP
+        vs.REPLICATIONS = 50
+
+        # --- baseline ---
+        print("FINITE BASE SIMULATION (validation run)")
+        base_file = "base_model_finite_results.csv"
+        clear_file(base_file)
+        for i in range(vs.REPLICATIONS):
+            print(f"start base replication {i+1}")
+            results, _ = finite_simulation(stop)
+            write_file(results, base_file)
+
+        # --- realistic ---
+        print("FINITE REALISTIC SIMULATION (validation run)")
+        real_file = "realistic_model_finite_results.csv"
+        clear_file(real_file)
+        for i in range(vs.REPLICATIONS):
+            print(f"start realistic replication {i+1}")
+            results, _ = rs.realistic_finite_simulation(stop)
+            write_file(results, real_file)
+
+        # --- confronto IC 95% ---
+        plot_ci_width_comparison(baseline_csv=base_file,
+                                 realistic_csv=real_file)
+
+    except Exception as e:
+        print("Error during CI validation comparison:")
+        traceback.print_exc()
+
+
 def start():
+
+    #TODO: rimuovere simulazione iper esponenziale, 2fa e con lambda variabile
     print("1. Base model simulation")
     print("2. Base model + 2FA simulation")
     print("3. Scaling model simulation")
@@ -508,6 +548,7 @@ def start():
     print("5. Base model + hyperexponential distribution")
     print("6. Realistic model (hyperexponential + variable lambda)")
     print("7. Base model + 2FA + variable lambda")
+    print("8. Validation: CI width comparison baseline vs realistic")
     try:
         choice = int(input("Select the type: "))
         if choice == 1:
@@ -527,6 +568,9 @@ def start():
             start_realistic_simulation()
         elif choice == 7:
             start_2fa_variabile_simulation()
+        elif choice == 8:
+            get_simulation(1)
+            start_ci_validation_comparison()
         else:
             print("Invalid choice.")
     except ValueError as e:
