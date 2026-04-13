@@ -8,6 +8,8 @@ from simulation.scaling_simulator import *
 import simulation.simulator_base_variabile as sbv 
 from simulation.double_factor_simulation import *
 from simulation.hyperexponential_simulator import *
+import simulation.realistic_simulator as rs
+from simulation.double_factor_variabile_simulator import finite_2fa_variabile_simulation
 
 def start_base_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -99,7 +101,7 @@ def start_infinite_simulation():
     for res in rep_stats:
         write_file(res, "base_model_infinite_results.csv")
 
-    remove_batch(batch_stats, 25)
+    remove_batch(batch_stats, 5)  # 5 batch × 3400 s = 17000 s ≈ 8.7 τ_mix (τ_mix ≈ 1961 s)
 
     if PRINT_PLOT_BATCH == 1:
         sim_type = "base_model"
@@ -302,7 +304,7 @@ def start_2fa_infinite_simulation():
     for res in rep_stats:
         write_file(res, "2fa_model_infinite_results.csv")
     
-    remove_batch(batch_stats, 25)
+    remove_batch(batch_stats, 5)  # 5 batch × 3400 s = 17000 s ≈ 8.7 τ_mix (τ_mix ≈ 1961 s)
     
     if PRINT_PLOT_BATCH == 1:
         sim_type = "2fa_model"
@@ -383,12 +385,129 @@ def start_hyperexponential_simulation():
             plot_num_jobs_t(stats.NP_times,   sim_type, f"NP",   ylabel="N P")
 
 
+def start_2fa_variabile_simulation():
+    """
+    Avvia la simulazione con 2FA e tasso di arrivo variabile (lambda_scaling).
+    """
+    try:
+        replicationStats = ReplicationStats()
+
+        print("FINITE 2FA + VARIABLE LAMBDA SIMULATION")
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            file_name = "2fa_variabile_model_transient_analysis_results.csv"
+            stop = STOP_ANALYSIS
+            vs.REPLICATIONS = 10
+        else:
+            file_name = "2fa_variabile_model_finite_results.csv"
+            stop = STOP
+            vs.REPLICATIONS = 50
+
+        clear_file(file_name)
+
+        for i in range(vs.REPLICATIONS):
+            print(f"start 2fa variabile replication {i+1}")
+            results, stats = finite_2fa_variabile_simulation(stop)
+            print(f"end 2fa variabile replication {i+1}")
+            write_file(results, file_name)
+            append_stats(replicationStats, results, stats)
+
+        sim_type = "2fa_variabile_model"
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
+            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+        else:
+            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
+            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
+            sim_type = "finite_simulation/2fa_variabile_model"
+            plot_num_jobs_t(stats.Nsys_times, sim_type, "Nsys", ylabel="N system")
+            plot_num_jobs_t(stats.NA_times,   sim_type, "NA",   ylabel="N A")
+            plot_num_jobs_t(stats.NB_times,   sim_type, "NB",   ylabel="N B")
+            plot_num_jobs_t(stats.NP_times,   sim_type, "NP",   ylabel="N P")
+
+        exit(1)
+
+    except Exception as e:
+        print("Error during 2FA variable lambda simulation:")
+        traceback.print_exc()
+
+
+def start_realistic_simulation():
+    """
+    Avvia la simulazione realistica: modello base con arrivi iper-esponenziali
+    e tasso di arrivo variabile (lambda_scaling).
+    """
+    try:
+        replicationStats = ReplicationStats()
+
+        print("FINITE REALISTIC SIMULATION (hyperexponential + variable lambda)")
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            file_name = "realistic_model_transient_analysis_results.csv"
+            stop = STOP_ANALYSIS
+            vs.REPLICATIONS = 10
+        else:
+            file_name = "realistic_model_finite_results.csv"
+            stop = STOP
+            vs.REPLICATIONS = 50
+
+        clear_file(file_name)
+
+        for i in range(vs.REPLICATIONS):
+            print(f"start realistic replication {i+1}")
+            results, stats = rs.realistic_finite_simulation(stop)
+            print(f"end realistic replication {i+1}")
+            write_file(results, file_name)
+            append_stats(replicationStats, results, stats)
+
+        sim_type = "realistic_model"
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
+            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+        else:
+            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
+            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
+            sim_type = "finite_simulation/realistic_model"
+            plot_num_jobs_t(stats.Nsys_times, sim_type, "Nsys", ylabel="N system")
+            plot_num_jobs_t(stats.NA_times,   sim_type, "NA",   ylabel="N A")
+            plot_num_jobs_t(stats.NB_times,   sim_type, "NB",   ylabel="N B")
+            plot_num_jobs_t(stats.NP_times,   sim_type, "NP",   ylabel="N P")
+
+        exit(1)
+
+    except Exception as e:
+        print("Error during realistic simulation:")
+        traceback.print_exc()
+
+
 def start():
     print("1. Base model simulation")
     print("2. Base model + 2FA simulation")
     print("3. Scaling model simulation")
     print("4. Base model + variable lambda simulation")
     print("5. Base model + hyperexponential distribution")
+    print("6. Realistic model (hyperexponential + variable lambda)")
+    print("7. Base model + 2FA + variable lambda")
     try:
         choice = int(input("Select the type: "))
         if choice == 1:
@@ -404,12 +523,16 @@ def start():
         elif choice == 5:
             get_simulation(choice)
             start_hyperexponential_simulation()
+        elif choice == 6:
+            start_realistic_simulation()
+        elif choice == 7:
+            start_2fa_variabile_simulation()
         else:
             print("Invalid choice.")
     except ValueError as e:
         print(f"Errore di conversione: {str(e)}")
         print(f"Tipo di errore: {type(e).__name__}")
-        traceback.print_exc()  
+        traceback.print_exc()
 
 
 

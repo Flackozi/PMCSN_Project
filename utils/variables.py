@@ -1,5 +1,5 @@
-K = 128
-B = 4080
+K = 128   # batch totali raccolti; dopo remove_batch(5) rimangono 123 batch effettivi
+B = 4080  # job per batch (~3400 s); sufficiente per decorrelazione (lag-1 ≈ 0.9216^4080 ≈ 0)
 
 INFINITE = 0
 FINITE = 1

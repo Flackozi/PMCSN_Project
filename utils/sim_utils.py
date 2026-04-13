@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 arrivalTemp = vs.START
 arrivalTempScaling = vs.START
+arrivalTempRealistic = vs.START
 
 def get_simulation(model):
     
@@ -37,6 +38,10 @@ def reset_arrival_temp():
 def reset_arrival_temp_scaling():
     global arrivalTempScaling
     arrivalTempScaling = vs.START
+
+def reset_arrival_temp_realistic():
+    global arrivalTempRealistic
+    arrivalTempRealistic = vs.START
 
 def Exponential(m):
     """Generate an Exponential random variate, use m > 0.0."""
@@ -73,17 +78,17 @@ def get_service_P():
 
 def get_service_A_2FA(classe):
     if classe == 1:
-        selectStream(1)
+        selectStream(7)
         return Exponential(0.2)
     elif classe == 2:
-        selectStream(2)
+        selectStream(8)
         return Exponential(0.4)
     else: 
-        selectStream(3)
+        selectStream(9)
         return Exponential(0.15)  # servizio più veloce per 2FA
 
 def get_service_P_2FA():
-    selectStream(5)
+    selectStream(10)
     return Exponential(0.7)  
 
 def HyperExponential(m):
@@ -180,7 +185,7 @@ def calculate_confidence_interval(data):
     t_star = rvms.idfStudent(n - 1, 1 - vs.ALPHA / 2)
 
     # calcolo intervallo di confidenza
-    margin_of_error = t_star * standard_deviation / math.sqrt(n - 1)
+    margin_of_error = t_star * standard_deviation / math.sqrt(n)
 
     return margin_of_error
 
@@ -198,6 +203,17 @@ def lambda_scaling(t: float) -> float:
     lam = base + spike
     return max(lam, vs.LAMBDA_MIN)
 
+
+
+def GetHyperArrivalScaling(current_time: float) -> float:
+    """
+    Genera il prossimo tempo di arrivo con distribuzione iper-esponenziale
+    e tasso lambda variabile nel tempo (lambda_scaling).
+    """
+    global arrivalTempRealistic
+    lam = lambda_scaling(current_time)
+    arrivalTempRealistic += HyperExponential(1.0 / lam)
+    return arrivalTempRealistic
 
 
 def GetArrivalScaling(current_time: float) -> float:

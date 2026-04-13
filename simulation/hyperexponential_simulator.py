@@ -186,7 +186,7 @@ def hyper_infinite_simulation(stop):
         # reset dello stato per la replica successiva
         stats.reset_infinite()
 
-    remove_batch(batch_stats, 25)
+    remove_batch(batch_stats, 5)
 
 
     if PRINT_PLOT_BATCH == 1:

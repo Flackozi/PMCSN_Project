@@ -22,10 +22,6 @@ def finite_2fa_simulation(stop):
     # Avvio simulazione
     results, stats = finite_simulation(stop)
 
-    # Ripristino comportamento originale
-    sim.get_service_P = get_service_P
-    sim.get_service_A = get_service_A
-
     print("\n[INFO] 2FA simulation completed\n")
 
     return results, stats
@@ -40,10 +36,6 @@ def infinite_2fa_simulation(stop):
 
     # Avvio simulazione
     batch_stats = infinite_simulation(stop)
-
-    # Ripristino comportamento originale
-    sim.get_service_P = get_service_P
-    sim.get_service_A = get_service_A
 
     print("\n[INFO] Infinite 2FA simulation completed\n")
 

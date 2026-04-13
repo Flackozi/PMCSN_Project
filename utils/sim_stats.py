@@ -163,41 +163,28 @@ class SimulationStats:
         self.area_P.queue  = self.area_P.node  - self.area_P.service
 
     def reset_infinite(self):
-        """Resettiamo tutte le variabili per una nuova simulazione infinita"""
-        self.t.current = 0.0
-        self.t.completion_A = float('inf')
-        self.t.completion_B = float('inf')
-        self.t.completion_P = float('inf')
-        
-        # stato dei nodi
-        self.A_jobs.clear()
-        self.B_jobs.clear()
-        self.P_jobs.clear()
+        """Reset solo contatori e aree per il nuovo batch.
 
-        # --- stato scaling dinamico ---
-        self.layer1_servers.clear()
-        self.spike_server.clear()
-        self.index_spike = 0
-        self.area_spike = Track()
-        self.t.completion_spike = float('inf')
+        NON resetta: A_jobs, B_jobs, P_jobs, t.current, t.completion_*, next_job_id.
+        Il batch means richiede una simulazione continua: lo stato del sistema
+        (job in coda, orologio) deve proseguire tra un batch e l'altro.
+        Resettare le code introdurrebbe un transitorio all'inizio di ogni batch,
+        rendendo le medie di batch gravemente distorte verso il basso (bias ~48%
+        per rho_B=0.96 con B=4080).
+        """
+        # Reset aree: si reintegra da zero per il nuovo batch
+        self.area_A  = Track()
+        self.area_B  = Track()
+        self.area_P  = Track()
+        self.area_A1 = Track()
+        self.area_A2 = Track()
+        self.area_A3 = Track()
 
-        # aree
-        self.area_A = Track()
-        self.area_B = Track()
-        self.area_P = Track()
-
-        # contatori base
+        # Reset contatori di batch (non lo stato fisico del sistema)
         self.job_arrived = 0
         self.index_A1 = self.index_A2 = self.index_A3 = 0
         self.index_B  = 0
         self.index_P  = 0
-
-        self.next_job_id = 0
-
-        self.t.rho_check = float('inf')
-        self.last_B_service = 0.0
-        self.last_B_capacity = 0.0
-        self.rhoB_samples.clear()
 
 
         
