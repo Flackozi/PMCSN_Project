@@ -17,14 +17,35 @@ def update_completion(jobs, current_time):
         return INFINITY
     else:
         min_remaining = min(job["rem"] for job in jobs.values())
-        
+
         if min_remaining < 0:
             print(f"[WARNING] min_remaining negativo: {min_remaining}")
             print(f"  Jobs: {jobs}")
             min_remaining = 0  # Forzo a 0 per evitare tempi nel passato
-        
+
         n = len(jobs)
         return current_time + min_remaining * n
+
+# =========================
+# funzione per il caso multiserver in A
+# =========================
+def update_completion_A(jobs, current_time, m_servers: int):
+    """
+    Completion time per A come PS con m server.
+    Stessa logica di update_completion_B.
+    """
+    if not jobs:
+        return INFINITY
+
+    n = len(jobs)
+    m = max(1, int(m_servers))
+    busy = min(m, n)
+
+    min_remaining = min(job["rem"] for job in jobs.values())
+    if min_remaining < 0:
+        min_remaining = 0.0
+
+    return current_time + (min_remaining * n) / busy
     
 # =========================
 # funzione per il caso multiserver in B
@@ -76,6 +97,32 @@ def adjust_servers_layer1(stats):
     stats.last_B_capacity = stats.area_B.capacity
 
 
+def adjust_servers_layer0(stats):
+    """Aggiunge o rimuove server per A in base a rho(A), stessa logica di layer1."""
+    if not stats.layer0_servers:
+        stats.layer0_servers.append({"id": 0})
+
+    num = len(stats.layer0_servers)
+
+    d_service  = stats.area_A.service  - stats.last_A_service
+    d_capacity = stats.area_A.capacity - stats.last_A_capacity
+    rho = (d_service / d_capacity) if d_capacity > 1e-12 else 0.0
+
+    stats.rhoA_samples.append((stats.t.current, rho))
+
+    if rho > RHO_UP:
+        new_id = max(s["id"] for s in stats.layer0_servers) + 1
+        stats.layer0_servers.append({"id": new_id})
+        print(f"[SCALING L0] rho_win={rho:.3f} > {RHO_UP} -> +1 server A, tot={len(stats.layer0_servers)}")
+
+    elif rho < RHO_DOWN:
+        if len(stats.A_jobs) < num:
+            stats.layer0_servers.pop()
+            print(f"[SCALING L0] rho_win={rho:.3f} < {RHO_DOWN} -> -1 server A, tot={len(stats.layer0_servers)}")
+
+    stats.last_A_service = stats.area_A.service
+    stats.last_A_capacity = stats.area_A.capacity
+
 
 def execute(stats, stop):
     # --- PROSSIMO EVENTO (incluso SPIKE) ---
@@ -90,11 +137,17 @@ def execute(stats, stop):
 
     dt = stats.t.next - stats.t.current  # tempo fino al prossimo evento
 
-    # --- A: aggiornamento aree e servizio (PS) ---
+    mA = len(stats.layer0_servers) if stats.layer0_servers else 1  # server attivi per A
+
+    stats.area_A.capacity += dt * mA
+
+    # --- A: aggiornamento aree e servizio (PS multiserver) ---
     if stats.A_jobs:
         nA = len(stats.A_jobs)
+        busyA = min(mA, nA)
+
         stats.area_A.node += dt * nA
-        stats.area_A.service += dt
+        stats.area_A.service += dt * busyA
 
         kA1 = sum(1 for j in stats.A_jobs.values() if j["classe"] == 1)
         kA2 = sum(1 for j in stats.A_jobs.values() if j["classe"] == 2)
@@ -104,17 +157,16 @@ def execute(stats, stop):
         stats.area_A2.node += dt * kA2
         stats.area_A3.node += dt * kA3
 
-        stats.area_A1.service += dt * (kA1 / nA)
-        stats.area_A2.service += dt * (kA2 / nA)
-        stats.area_A3.service += dt * (kA3 / nA)
+        stats.area_A1.service += dt * busyA * (kA1 / nA)
+        stats.area_A2.service += dt * busyA * (kA2 / nA)
+        stats.area_A3.service += dt * busyA * (kA3 / nA)
 
-        delta = dt / nA
+        delta = dt * busyA / nA
         for job in stats.A_jobs.values():
             job["rem"] -= delta
 
     mB = len(stats.layer1_servers) if stats.layer1_servers else 1 # numero di server attivi nel layer 1
-    
-    
+
     stats.area_B.capacity += dt * mB
 
     # --- B: aggiornamento aree e servizio (PS) ---
@@ -168,22 +220,27 @@ def execute(stats, stop):
         stats.job_times[jid] = {"arrival": stats.t.current, "departure": None}
         stats.job_arrived += 1
 
-        stats.t.arrival = GetArrivalScaling(stats.t.current)
+        stats.t.arrival = GetHyperArrivalScaling(stats.t.current)
         if stats.t.arrival > stop:
             stats.t.last = stats.t.current
             stats.t.arrival = INFINITY
 
-        stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
+        mA_now = max(1, len(stats.layer0_servers))
+        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
 
-    # --- CHECK PERIODICO DI RHO(B) E SCALING LAYER 1 ---
+    # --- CHECK PERIODICO DI RHO E SCALING LAYER 0 (A) + LAYER 1 (B) ---
     elif stats.t.current == stats.t.rho_check:
+        adjust_servers_layer0(stats)
         adjust_servers_layer1(stats)
 
         # prossimo check: dopo STOP lo spengo per non allungare la fase di drain
         next_check = stats.t.current + vs.RHO_CHECK_INTERVAL
         stats.t.rho_check = next_check if next_check <= stop else INFINITY
 
-        # se è cambiato m, ricalcolo la completion di B (dipende da m)
+        # se è cambiato m, ricalcolo le completion (dipendono da m)
+        mA_now = max(1, len(stats.layer0_servers))
+        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
+
         mB_now = len(stats.layer1_servers) if stats.layer1_servers else 1
         stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB_now)
 
@@ -253,7 +310,8 @@ def execute(stats, stop):
             # job classe 3 → esce
             stats.index_A3 += 1
 
-        stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
+        mA_now = max(1, len(stats.layer0_servers))
+        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
 
     # --- COMPLETION IN B ---
     elif stats.t.current == stats.t.completion_B:
@@ -267,9 +325,10 @@ def execute(stats, stop):
         stats.next_job_id += 1
         stats.A_jobs[jid_A2] = {"classe": 2, "rem": get_service_A(2)}
 
+        mA_now = max(1, len(stats.layer0_servers))
         mB_now = max(1, len(stats.layer1_servers))
 
-        stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
+        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
         stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB_now)
 
     # --- COMPLETION IN P ---
@@ -282,7 +341,8 @@ def execute(stats, stop):
         stats.next_job_id += 1
         stats.A_jobs[jid] = {"classe": 3, "rem": get_service_A(3)}
 
-        stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
+        mA_now = max(1, len(stats.layer0_servers))
+        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
         stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current)
 
     # --- COMPLETION NELLO SPIKE ---
@@ -297,7 +357,8 @@ def execute(stats, stop):
         stats.next_job_id += 1
         stats.A_jobs[jid_A2] = {"classe": 2, "rem": get_service_A(2)}
 
-        stats.t.completion_A = update_completion(stats.A_jobs, stats.t.current)
+        mA_now = max(1, len(stats.layer0_servers))
+        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
         stats.t.completion_spike = update_completion(stats.spike_server, stats.t.current)
 
 # =========================
@@ -313,12 +374,16 @@ def scaling_finite_simulation(stop):
     current_checkpoint = 0
 
     s = getSeed()
-    reset_arrival_temp_scaling()
+    reset_arrival_temp_realistic()
 
     stats = SimulationStats()
     stats.reset(vs.START)
 
     # snapshot iniziale delle aree (finestra parte da START)
+    stats.last_A_service = stats.area_A.service
+    stats.last_A_capacity = stats.area_A.capacity
+    stats.rhoA_samples = []
+
     stats.last_B_service = stats.area_B.service
     stats.last_B_capacity = stats.area_B.capacity
     stats.rhoB_samples = []
@@ -326,14 +391,15 @@ def scaling_finite_simulation(stop):
     first_check = stats.t.current + vs.RHO_CHECK_INTERVAL
     stats.t.rho_check = first_check if first_check <= stop else INFINITY
 
-    #per plot spike 
+    #per plot spike
     stats.spike_active_times = [(stats.t.current, 0)]
 
-    # almeno un server nel layer 1
+    # almeno un server nel layer 0 (A) e layer 1 (B)
+    stats.layer0_servers = [{"id": 0}]
     stats.layer1_servers = [{"id": 0, "jobs": {}}]
 
-    # primo arrivo esterno
-    stats.t.arrival = GetArrivalScaling(stats.t.current)
+    # primo arrivo esterno (iper-esponenziale + lambda variabile)
+    stats.t.arrival = GetHyperArrivalScaling(stats.t.current)
 
     while (
     (stats.t.arrival < stop)
@@ -386,6 +452,10 @@ def scaling_finite_simulation(stop):
                 stats.lambda_times = []
             stats.lambda_times.append((stats.t.current, lam_now))
 
+            if not hasattr(stats, "layer0_servers_times"):
+                stats.layer0_servers_times = []
+            stats.layer0_servers_times.append((stats.t.current, len(stats.layer0_servers)))
+
             if not hasattr(stats, "layer1_servers_times"):
                 stats.layer1_servers_times = []
             stats.layer1_servers_times.append((stats.t.current, len(stats.layer1_servers)))
@@ -423,8 +493,8 @@ def return_stats(stats, horizon, s):
     system_avg_service = (stats.area_A.service + stats.area_B.service + stats.area_P.service) / stats.index_A3 if stats.index_A3 > 0 else 0.0
     system_avg_wait = system_avg_response - system_avg_service
 
+    A_util = (stats.area_A.service / stats.area_A.capacity) if stats.area_A.capacity > 0 else 0.0
     B_util = (stats.area_B.service / stats.area_B.capacity) if stats.area_B.capacity > 0 else 0.0
-        
 
     return {
         "seed": s,
@@ -432,7 +502,7 @@ def return_stats(stats, horizon, s):
         # statistiche centro A
         "A_avg_resp": stats.area_A.node / comp_A if comp_A > 0 else 0.0,
         "A_avg_wait": stats.area_A.queue / comp_A if comp_A > 0 else 0.0,
-        "A_utilization": stats.area_A.service / horizon if horizon > 0 else 0.0,
+        "A_utilization": A_util,
         "A_avg_num_job": stats.area_A.node / horizon if horizon > 0 else 0.0,
         "A_avg_serv": stats.area_A.service / comp_A if comp_A > 0 else 0.0,
         "A_throughput": comp_A / horizon if horizon > 0 else 0.0,

@@ -96,6 +96,7 @@ class SimulationStats:
         self.job_times = {}  # dizionario in cui mi salvo i tempi di arrivo dei job {job_id: arrival_time} e i tempi di uscita {job_id: departure_time}
 
         # scaling dinamico
+        self.layer0_servers = []  # server per A (scaling orizzontale)
         self.layer1_servers = []
         self.spike_server = {}
         self.index_spike = 0
@@ -132,6 +133,7 @@ class SimulationStats:
         self.area_A3 = Track()
 
         # --- stato scaling dinamico ---
+        self.layer0_servers.clear()
         self.layer1_servers.clear()
         self.spike_server.clear()
         self.index_spike = 0
@@ -147,6 +149,10 @@ class SimulationStats:
         self.next_job_id = 0
 
         self.SI_samples.clear()
+        # --- autoscaling: misure su finestra per rho_A ---
+        self.last_A_service = 0.0
+        self.last_A_capacity = 0.0
+        self.rhoA_samples = []
         # --- autoscaling: misure su finestra per rho_B ---
         self.last_B_service = 0.0
         self.last_B_capacity = 0.0

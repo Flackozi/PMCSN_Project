@@ -216,7 +216,8 @@ def start_scaling_sim():
 
         plot_lambda_t(stats.lambda_times, sim_type, "lambda_t")
         plot_system_avg_response_time_t(stats.system_resp_times, sim_type, "system_resp_t")
-        plot_active_servers_t(stats.layer1_servers_times, sim_type, "servers_t")
+        plot_active_servers_t(stats.layer0_servers_times, sim_type, "servers_A_t", ylabel="Active servers (A)")
+        plot_active_servers_t(stats.layer1_servers_times, sim_type, "servers_B_t", ylabel="Active servers (B)")
         plot_spike_active_t(stats.spike_active_times, sim_type, "spike_active_t")
 
         sim_type = "scaling_model"

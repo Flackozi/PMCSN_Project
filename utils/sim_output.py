@@ -94,7 +94,7 @@ def plot_system_avg_response_time_t(system_resp_times, sim_type, name):
     plt.close()
 
 # Funzione per plottare il numero di server attivi di layer 1 nel tempo
-def plot_active_servers_t(layer1_servers_times, sim_type, name):
+def plot_active_servers_t(layer1_servers_times, sim_type, name, ylabel='Active servers'):
     """
     layer1_servers_times: lista di tuple (t, n_servers)
     Salva in output/plot/{sim_type}/{name}.png
@@ -107,7 +107,7 @@ def plot_active_servers_t(layer1_servers_times, sim_type, name):
     plt.figure(figsize=(10, 6))
     plt.step(x_values, y_values, where='post')
     plt.xlabel('Time')
-    plt.ylabel('Active servers (Layer 1)')
+    plt.ylabel(ylabel)
     plt.grid(True)
 
     os.makedirs(output_dir, exist_ok=True)
