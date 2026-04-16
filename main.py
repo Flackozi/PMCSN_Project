@@ -505,7 +505,8 @@ def start_ci_validation_comparison():
     Entry point di validazione: esegue in sequenza la simulazione baseline
     e quella realistica (lambda variabile + iper-esponenziale) e produce
     un bar chart che confronta l'ampiezza dell'IC 95% dei tempi di risposta
-    per i vari centri nei due scenari.
+    per i vari centri nei due scenari, oltre a tutti i plot consueti per
+    entrambi gli scenari.
     """
     try:
         stop = STOP
@@ -515,19 +516,53 @@ def start_ci_validation_comparison():
         print("FINITE BASE SIMULATION (validation run)")
         base_file = "base_model_finite_results.csv"
         clear_file(base_file)
+        baseReplicationStats = ReplicationStats()
         for i in range(vs.REPLICATIONS):
             print(f"start base replication {i+1}")
-            results, _ = finite_simulation(stop)
+            results, base_stats = finite_simulation(stop)
             write_file(results, base_file)
+            append_stats(baseReplicationStats, results, base_stats)
+
+        # plot consueti baseline
+        sim_type = "base_model"
+        plot_replication_response_times(baseReplicationStats.A_resp_interval, sim_type, "A")
+        plot_replication_response_times(baseReplicationStats.B_resp_interval, sim_type, "B")
+        plot_replication_response_times(baseReplicationStats.P_resp_interval, sim_type, "P")
+        plot_replication_response_times(baseReplicationStats.A1_resp_interval, sim_type, "A1")
+        plot_replication_response_times(baseReplicationStats.A2_resp_interval, sim_type, "A2")
+        plot_replication_response_times(baseReplicationStats.A3_resp_interval, sim_type, "A3")
+
+        sim_type = "finite_simulation/base_model"
+        plot_num_jobs_t(base_stats.Nsys_times, sim_type, "Nsys", ylabel="N system")
+        plot_num_jobs_t(base_stats.NA_times,   sim_type, "NA",   ylabel="N A")
+        plot_num_jobs_t(base_stats.NB_times,   sim_type, "NB",   ylabel="N B")
+        plot_num_jobs_t(base_stats.NP_times,   sim_type, "NP",   ylabel="N P")
 
         # --- realistic ---
         print("FINITE REALISTIC SIMULATION (validation run)")
         real_file = "realistic_model_finite_results.csv"
         clear_file(real_file)
+        realReplicationStats = ReplicationStats()
         for i in range(vs.REPLICATIONS):
             print(f"start realistic replication {i+1}")
-            results, _ = rs.realistic_finite_simulation(stop)
+            results, real_stats = rs.realistic_finite_simulation(stop)
             write_file(results, real_file)
+            append_stats(realReplicationStats, results, real_stats)
+
+        # plot consueti realistic
+        sim_type = "realistic_model"
+        plot_replication_response_times(realReplicationStats.A_resp_interval, sim_type, "A")
+        plot_replication_response_times(realReplicationStats.B_resp_interval, sim_type, "B")
+        plot_replication_response_times(realReplicationStats.P_resp_interval, sim_type, "P")
+        plot_replication_response_times(realReplicationStats.A1_resp_interval, sim_type, "A1")
+        plot_replication_response_times(realReplicationStats.A2_resp_interval, sim_type, "A2")
+        plot_replication_response_times(realReplicationStats.A3_resp_interval, sim_type, "A3")
+
+        sim_type = "finite_simulation/realistic_model"
+        plot_num_jobs_t(real_stats.Nsys_times, sim_type, "Nsys", ylabel="N system")
+        plot_num_jobs_t(real_stats.NA_times,   sim_type, "NA",   ylabel="N A")
+        plot_num_jobs_t(real_stats.NB_times,   sim_type, "NB",   ylabel="N B")
+        plot_num_jobs_t(real_stats.NP_times,   sim_type, "NP",   ylabel="N P")
 
         # --- confronto IC 95% ---
         plot_ci_width_comparison(baseline_csv=base_file,
