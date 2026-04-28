@@ -5,7 +5,8 @@
       "Bash(python -c \"import py_compile; py_compile.compile\\('simulation/scaling_simulator.py', doraise=True\\); print\\('OK scaling_simulator.py'\\)\")",
       "Bash(python -c \"import py_compile; py_compile.compile\\('utils/sim_stats.py', doraise=True\\); print\\('OK sim_stats.py'\\)\")",
       "Bash(python -c \"import py_compile; py_compile.compile\\('utils/sim_output.py', doraise=True\\); print\\('OK sim_output.py'\\)\")",
-      "Bash(python -c \"import py_compile; py_compile.compile\\('main.py', doraise=True\\); print\\('OK main.py'\\)\")"
+      "Bash(python -c \"import py_compile; py_compile.compile\\('main.py', doraise=True\\); print\\('OK main.py'\\)\")",
+      "Bash(python -c \"from simulation.scaling_simulator import *; print\\('OK'\\)\")"
     ]
   }
 }

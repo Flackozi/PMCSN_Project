@@ -16,6 +16,7 @@ class Time:
         self.next = 0.0
         self.last = 0.0
         self.completion_spike = float('inf')
+        self.completion_spike_A = float('inf')
         self.rho_check = float('inf')   # nuovo evento periodico
 
 # -----------------------------
@@ -102,6 +103,11 @@ class SimulationStats:
         self.index_spike = 0
         self.area_spike = Track()
         self.spike_events = []  # timestamp di arrivo dei job nello spike
+        self.spike_A_server = {}
+        self.index_spike_A = 0
+        self.area_spike_A = Track()
+        self.spike_A_events = []
+        self.spike_A_active_times = []
         self.SI_samples = []
 
         # --- Serie temporali popolazione (per plot variabilità) ---
@@ -139,6 +145,12 @@ class SimulationStats:
         self.index_spike = 0
         self.area_spike = Track()
         self.t.completion_spike = float('inf')
+        self.spike_A_server.clear()
+        self.index_spike_A = 0
+        self.area_spike_A = Track()
+        self.t.completion_spike_A = float('inf')
+        self.spike_A_events.clear()
+        self.spike_A_active_times.clear()
 
         # contatori base
         self.job_arrived = 0

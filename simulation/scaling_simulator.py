@@ -131,8 +131,9 @@ def execute(stats, stop):
         stats.t.completion_A,
         stats.t.completion_B,
         stats.t.completion_P,
-        stats.t.completion_spike,  
-        stats.t.rho_check 
+        stats.t.completion_spike,
+        stats.t.completion_spike_A,
+        stats.t.rho_check
     )
 
     dt = stats.t.next - stats.t.current  # tempo fino al prossimo evento
@@ -191,13 +192,22 @@ def execute(stats, stop):
         for job in stats.P_jobs.values():
             job["rem"] -= delta
 
-    # --- SPIKE: aggiornamento aree e servizio (PS) ---
+    # --- SPIKE B: aggiornamento aree e servizio (PS) ---
     if stats.spike_server:
-        nS = len(stats.spike_server) # numero di job nello spike server
+        nS = len(stats.spike_server)
         stats.area_spike.node += dt * nS
         stats.area_spike.service += dt
         delta = dt / nS
         for job in stats.spike_server.values():
+            job["rem"] -= delta
+
+    # --- SPIKE A: aggiornamento aree e servizio (PS) ---
+    if stats.spike_A_server:
+        nSA = len(stats.spike_A_server)
+        stats.area_spike_A.node += dt * nSA
+        stats.area_spike_A.service += dt
+        delta = dt / nSA
+        for job in stats.spike_A_server.values():
             job["rem"] -= delta
 
     # AVANZA L'OROLOGIO
@@ -215,18 +225,31 @@ def execute(stats, stop):
         jid = stats.next_job_id
         stats.next_job_id += 1
 
-        stats.A_jobs[jid] = {"classe": 1, "rem": get_service_A(1)}
-
         stats.job_times[jid] = {"arrival": stats.t.current, "departure": None}
         stats.job_arrived += 1
+
+        lam_now = lambda_scaling(stats.t.current)
+        is_anomalous = lam_now > (vs.LAMBDA_NORMAL_MAX + vs.ANOM_EPS)
+        mA_now = max(1, len(stats.layer0_servers))
+        nA = len(stats.A_jobs)
+        SI_excess_A_after = max(0, (nA + 1) - mA_now)
+
+        if (not is_anomalous) or SI_excess_A_after < SImax:
+            stats.A_jobs[jid] = {"classe": 1, "rem": get_service_A(1)}
+            stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
+        else:
+            was_empty = (len(stats.spike_A_server) == 0)
+            stats.spike_A_server[jid] = {"rem": get_service_spike_A()}
+            stats.spike_A_events.append(stats.t.current)
+            stats.index_spike_A += 1
+            if was_empty:
+                stats.spike_A_active_times.append((stats.t.current, 1))
+            stats.t.completion_spike_A = update_completion(stats.spike_A_server, stats.t.current)
 
         stats.t.arrival = GetHyperArrivalScaling(stats.t.current)
         if stats.t.arrival > stop:
             stats.t.last = stats.t.current
             stats.t.arrival = INFINITY
-
-        mA_now = max(1, len(stats.layer0_servers))
-        stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
 
     # --- CHECK PERIODICO DI RHO E SCALING LAYER 0 (A) + LAYER 1 (B) ---
     elif stats.t.current == stats.t.rho_check:
@@ -345,7 +368,7 @@ def execute(stats, stop):
         stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
         stats.t.completion_P = update_completion(stats.P_jobs, stats.t.current)
 
-    # --- COMPLETION NELLO SPIKE ---
+    # --- COMPLETION NELLO SPIKE B ---
     elif stats.t.current == stats.t.completion_spike:
         jid, job = min(stats.spike_server.items(), key=lambda x: x[1]["rem"])
         del stats.spike_server[jid]
@@ -360,6 +383,40 @@ def execute(stats, stop):
         mA_now = max(1, len(stats.layer0_servers))
         stats.t.completion_A = update_completion_A(stats.A_jobs, stats.t.current, mA_now)
         stats.t.completion_spike = update_completion(stats.spike_server, stats.t.current)
+
+    # --- COMPLETION NELLO SPIKE A ---
+    elif stats.t.current == stats.t.completion_spike_A:
+        jid, job = min(stats.spike_A_server.items(), key=lambda x: x[1]["rem"])
+        del stats.spike_A_server[jid]
+        if len(stats.spike_A_server) == 0:
+            stats.spike_A_active_times.append((stats.t.current, 0))
+
+        # dopo spike_A → routing identico a completion_A classe 1
+        lam_now = lambda_scaling(stats.t.current)
+        is_anomalous = lam_now > (vs.LAMBDA_NORMAL_MAX + vs.ANOM_EPS)
+        mB_now = max(1, len(stats.layer1_servers))
+        nB = len(stats.B_jobs)
+        SI_excess_after = max(0, (nB + 1) - mB_now)
+
+        if (not is_anomalous) or SI_excess_after < SImax:
+            jid_B = stats.next_job_id
+            stats.next_job_id += 1
+            stats.B_jobs[jid_B] = {"rem": get_service_B()}
+            stats.index_A1 += 1
+            stats.t.completion_B = update_completion_B(stats.B_jobs, stats.t.current, mB_now)
+        else:
+            was_empty = (len(stats.spike_server) == 0)
+            jid_S = stats.next_job_id
+            stats.next_job_id += 1
+            stats.spike_server[jid_S] = {"rem": get_service_spike()}
+            stats.spike_events.append(stats.t.current)
+            stats.index_A1 += 1
+            stats.index_spike += 1
+            if was_empty:
+                stats.spike_active_times.append((stats.t.current, 1))
+            stats.t.completion_spike = update_completion(stats.spike_server, stats.t.current)
+
+        stats.t.completion_spike_A = update_completion(stats.spike_A_server, stats.t.current)
 
 # =========================
 #   SIMULAZIONE FINITA
@@ -393,6 +450,7 @@ def scaling_finite_simulation(stop):
 
     #per plot spike
     stats.spike_active_times = [(stats.t.current, 0)]
+    stats.spike_A_active_times = [(stats.t.current, 0)]
 
     # almeno un server nel layer 0 (A) e layer 1 (B)
     stats.layer0_servers = [{"id": 0}]
@@ -407,6 +465,7 @@ def scaling_finite_simulation(stop):
     or stats.B_jobs
     or stats.P_jobs
     or stats.spike_server
+    or stats.spike_A_server
     ):
         execute(stats, stop)
 

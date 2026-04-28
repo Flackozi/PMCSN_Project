@@ -196,7 +196,7 @@ def start_scaling_sim():
 
         else:
             stop = STOP
-            vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
+            vs.REPLICATIONS = 1  # per la simulazione normale facciamo più repliche
             file_name = "scaling_model_finite_results.csv"
             sim_type = "finite_simulation/scaling_model"
 
@@ -218,7 +218,8 @@ def start_scaling_sim():
         plot_system_avg_response_time_t(stats.system_resp_times, sim_type, "system_resp_t")
         plot_active_servers_t(stats.layer0_servers_times, sim_type, "servers_A_t", ylabel="Active servers (A)")
         plot_active_servers_t(stats.layer1_servers_times, sim_type, "servers_B_t", ylabel="Active servers (B)")
-        plot_spike_active_t(stats.spike_active_times, sim_type, "spike_active_t")
+        plot_spike_active_t(stats.spike_active_times, sim_type, "spike_B_active_t", ylabel="Spike B active (0/1)")
+        plot_spike_active_t(stats.spike_A_active_times, sim_type, "spike_A_active_t", ylabel="Spike A active (0/1)")
 
         sim_type = "scaling_model"
 

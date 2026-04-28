@@ -116,7 +116,7 @@ def plot_active_servers_t(layer1_servers_times, sim_type, name, ylabel='Active s
     plt.close()
 
 # Funzione per plottare lo stato di attività del server spike nel tempo
-def plot_spike_active_t(spike_active_times, sim_type, name):
+def plot_spike_active_t(spike_active_times, sim_type, name, ylabel='Spike server active (0/1)'):
     """
     spike_active_times: lista di tuple (t, 0/1)
     Salva in output/plot/{sim_type}/{name}.png
@@ -132,7 +132,7 @@ def plot_spike_active_t(spike_active_times, sim_type, name):
     plt.figure(figsize=(10, 6))
     plt.step(x_values, y_values, where='post')
     plt.xlabel('Time')
-    plt.ylabel('Spike server active (0/1)')
+    plt.ylabel(ylabel)
     plt.ylim(-0.1, 1.1)
 
     os.makedirs(output_dir, exist_ok=True)

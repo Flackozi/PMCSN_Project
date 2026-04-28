@@ -68,13 +68,16 @@ def get_service_A(classe):
 def get_service_spike():
     return Exponential(1 / vs.BASE_MU_SPIKE)
 
+def get_service_spike_A():
+    return Exponential(1 / vs.BASE_MU_SPIKE_A)
+
 def get_service_B():
     selectStream(4)
     return Exponential(0.8)
 
 def get_service_P():
     selectStream(5)
-    return Exponential(0.4)
+    return Exponential(0.4) 
 
 def get_service_A_2FA(classe):
     if classe == 1:
