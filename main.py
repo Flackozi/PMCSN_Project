@@ -12,6 +12,7 @@ import simulation.realistic_simulator as rs
 from simulation.double_factor_variabile_simulator import finite_2fa_variabile_simulation
 from simulation.validation2FA import run_validation2FA
 from simulation.validation2FAscaling import run_validation2FAscaling
+from simulation.scaling_2fa_simulation import scaling_2fa_finite_simulation
 
 def start_base_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -248,6 +249,66 @@ def start_scaling_sim():
 
     except Exception as e:
         print("Error during scaling simulation:")
+        traceback.print_exc()
+
+
+def start_scaling_2fa_sim():
+    """
+    Avvia la simulazione scaling con 2FA: identica a start_scaling_sim
+    ma usa scaling_2fa_finite_simulation (tempi A3=0.15s, P=0.7s).
+    """
+    try:
+        replicationStats = ReplicationStats()
+        if vs.TRANSIENT_ANALYSIS == 1:
+            stop = STOP_ANALYSIS
+            vs.REPLICATIONS = 10
+            file_name = "scaling_2fa_model_transient_analysis_results.csv"
+            sim_type = "transient_analysis/scaling_2fa_model"
+        else:
+            stop = STOP
+            vs.REPLICATIONS = 1
+            file_name = "scaling_2fa_model_finite_results.csv"
+            sim_type = "finite_simulation/scaling_2fa_model"
+
+        print("FINITE SCALING 2FA SIMULATION")
+
+        clear_file(file_name)
+
+        for i in range(vs.REPLICATIONS):
+            print(f"start scaling 2fa replication {i+1}")
+            results, stats = scaling_2fa_finite_simulation(stop)
+            print(f"end scaling 2fa replication {i+1}")
+            write_file(results, file_name)
+            append_stats(replicationStats, results, stats)
+
+        plot_lambda_t(stats.lambda_times, sim_type, "lambda_t")
+        plot_system_avg_response_time_t(stats.system_resp_times, sim_type, "system_resp_t")
+        plot_active_servers_t(stats.layer0_servers_times, sim_type, "servers_A_t", ylabel="Active servers (A)")
+        plot_active_servers_t(stats.layer1_servers_times, sim_type, "servers_B_t", ylabel="Active servers (B)")
+        plot_spike_active_t(stats.spike_active_times, sim_type, "spike_B_active_t", ylabel="Spike B active (0/1)")
+        plot_spike_active_t(stats.spike_A_active_times, sim_type, "spike_A_active_t", ylabel="Spike A active (0/1)")
+
+        sim_type = "scaling_2fa_model"
+
+        if vs.TRANSIENT_ANALYSIS == 1:
+            plot_analysis(replicationStats.A_resp_interval, replicationStats.seed, "A", sim_type)
+            plot_analysis(replicationStats.B_resp_interval, replicationStats.seed, "B", sim_type)
+            plot_analysis(replicationStats.P_resp_interval, replicationStats.seed, "P", sim_type)
+            plot_analysis(replicationStats.A1_resp_interval, replicationStats.seed, "A1", sim_type)
+            plot_analysis(replicationStats.A2_resp_interval, replicationStats.seed, "A2", sim_type)
+            plot_analysis(replicationStats.A3_resp_interval, replicationStats.seed, "A3", sim_type)
+        else:
+            plot_replication_response_times(replicationStats.A_resp_interval, sim_type, "A")
+            plot_replication_response_times(replicationStats.B_resp_interval, sim_type, "B")
+            plot_replication_response_times(replicationStats.P_resp_interval, sim_type, "P")
+            plot_replication_response_times(replicationStats.A1_resp_interval, sim_type, "A1")
+            plot_replication_response_times(replicationStats.A2_resp_interval, sim_type, "A2")
+            plot_replication_response_times(replicationStats.A3_resp_interval, sim_type, "A3")
+
+        exit(1)
+
+    except Exception as e:
+        print("Error during scaling 2FA simulation:")
         traceback.print_exc()
 
 
@@ -590,6 +651,7 @@ def start():
     print("8. Validation: CI width comparison baseline vs realistic")
     print("9. Validation: N_avg vs λ — 1FA vs 2FA (Fig. 6.28)")
     print("10. Validation: N_avg + RT vs λ — 1FA vs 2FA (Scaling model)")
+    print("11. Scaling model + 2FA simulation")
     try:
         choice = int(input("Select the type: "))
         if choice == 1:
@@ -616,6 +678,8 @@ def start():
             run_validation2FA()
         elif choice == 10:
             run_validation2FAscaling()
+        elif choice == 11:
+            start_scaling_2fa_sim()
         else:
             print("Invalid choice.")
     except ValueError as e:
