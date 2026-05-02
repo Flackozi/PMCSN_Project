@@ -10,6 +10,8 @@ from simulation.double_factor_simulation import *
 from simulation.hyperexponential_simulator import *
 import simulation.realistic_simulator as rs
 from simulation.double_factor_variabile_simulator import finite_2fa_variabile_simulation
+from simulation.validation2FA import run_validation2FA
+from simulation.validation2FAscaling import run_validation2FAscaling
 
 def start_base_simulation():
     if vs.SIM_TYPE == FINITE:
@@ -586,6 +588,8 @@ def start():
     print("6. Realistic model (hyperexponential + variable lambda)")
     print("7. Base model + 2FA + variable lambda")
     print("8. Validation: CI width comparison baseline vs realistic")
+    print("9. Validation: N_avg vs λ — 1FA vs 2FA (Fig. 6.28)")
+    print("10. Validation: N_avg + RT vs λ — 1FA vs 2FA (Scaling model)")
     try:
         choice = int(input("Select the type: "))
         if choice == 1:
@@ -608,6 +612,10 @@ def start():
         elif choice == 8:
             get_simulation(1)
             start_ci_validation_comparison()
+        elif choice == 9:
+            run_validation2FA()
+        elif choice == 10:
+            run_validation2FAscaling()
         else:
             print("Invalid choice.")
     except ValueError as e:
