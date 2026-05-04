@@ -199,7 +199,7 @@ def start_scaling_sim():
 
         else:
             stop = STOP
-            vs.REPLICATIONS = 1  # per la simulazione normale facciamo più repliche
+            vs.REPLICATIONS = 50  # per la simulazione normale facciamo più repliche
             file_name = "scaling_model_finite_results.csv"
             sim_type = "finite_simulation/scaling_model"
 
@@ -266,7 +266,7 @@ def start_scaling_2fa_sim():
             sim_type = "transient_analysis/scaling_2fa_model"
         else:
             stop = STOP
-            vs.REPLICATIONS = 1
+            vs.REPLICATIONS = 50
             file_name = "scaling_2fa_model_finite_results.csv"
             sim_type = "finite_simulation/scaling_2fa_model"
 
