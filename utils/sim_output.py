@@ -79,6 +79,9 @@ def plot_system_avg_response_time_t(system_resp_times, sim_type, name):
     """
     output_dir = f"simulation/../output/plot/{sim_type}"
 
+    if not system_resp_times:
+        return
+
     x_values = [t for t, _ in system_resp_times]
     y_values = [r for _, r in system_resp_times]
 
@@ -87,6 +90,54 @@ def plot_system_avg_response_time_t(system_resp_times, sim_type, name):
     plt.xlabel('Time')
     plt.ylabel('System avg response time (running)')
     plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+
+def plot_rho_t(rho_times, sim_type, name, ylabel='Rho'):
+    output_dir = f"simulation/../output/plot/{sim_type}"
+
+    if not rho_times:
+        return
+
+    x_values = [t for t, _ in rho_times]
+    y_values = [rho for _, rho in rho_times]
+
+    plt.figure(figsize=(10, 6))
+    plt.step(x_values, y_values, where='post')
+    plt.xlabel('Time')
+    plt.ylabel(ylabel)
+    plt.grid(True)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f'{name}.png')
+    plt.savefig(output_path)
+    plt.close()
+
+def plot_realistic_vs_scaling_response_time(realistic_resp_times, scaling_resp_times, qos=10.0,
+                                            name="realistic_vs_scaling_response_time"):
+    output_dir = "simulation/../output/plot/finite_simulation/realistic_vs_scaling"
+
+    if not realistic_resp_times or not scaling_resp_times:
+        return
+
+    real_x = [t for t, _ in realistic_resp_times]
+    real_y = [r for _, r in realistic_resp_times]
+    scaling_x = [t for t, _ in scaling_resp_times]
+    scaling_y = [r for _, r in scaling_resp_times]
+    end_time = max(real_x[-1], scaling_x[-1])
+
+    plt.figure(figsize=(10, 6))
+    plt.axhline(y=qos, color='r', linestyle='--', label=f'QoS {qos:g}s')
+    plt.plot(scaling_x, scaling_y, label='Improved model')
+    plt.plot(real_x, real_y, label='Realistic base model')
+    plt.xlim(0, end_time)
+    plt.xlabel('Time')
+    plt.ylabel('System response time (s)')
+    plt.grid(True)
+    plt.legend()
 
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, f'{name}.png')

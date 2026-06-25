@@ -87,6 +87,7 @@ class SimulationStats:
         self.A1_resp_times = []
         self.A2_resp_times = []
         self.A3_resp_times = []
+        self.system_resp_times = []
 
         # id progressivo dei job (lo usiamo in simulator.py)
         self.next_job_id = 0
@@ -115,6 +116,9 @@ class SimulationStats:
         self.NB_times = []      # (t, N_B)
         self.NP_times = []      # (t, N_P)  
         self.Nsys_times = []    # (t, N_sistema)
+        self.lambda_times = []
+        self.layer0_servers_times = []
+        self.layer1_servers_times = []
 
         self.raw_rt = []  # lista dei tempi di risposta grezzi (per calcolo IC esterno)
         
@@ -169,6 +173,10 @@ class SimulationStats:
         self.last_B_service = 0.0
         self.last_B_capacity = 0.0
         self.rhoB_samples = []
+        self.lambda_times = []
+        self.layer0_servers_times = []
+        self.layer1_servers_times = []
+        self.system_resp_times = []
 
 
     def calculate_area_queue(self):
@@ -280,4 +288,5 @@ class ReplicationStats:
         self.A1_resp_interval = []     # Serie temporale per A1
         self.A2_resp_interval = []     # Serie temporale per A2
         self.A3_resp_interval = []     # Serie temporale per A3
+        self.system_resp_interval = [] # Tempo di risposta del sistema nel tempo
 

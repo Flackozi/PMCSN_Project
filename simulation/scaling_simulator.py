@@ -455,6 +455,12 @@ def scaling_finite_simulation(stop):
     # almeno un server nel layer 0 (A) e layer 1 (B)
     stats.layer0_servers = [{"id": 0}]
     stats.layer1_servers = [{"id": 0, "jobs": {}}]
+    stats.layer0_servers_times = [(stats.t.current, len(stats.layer0_servers))]
+    stats.layer1_servers_times = [(stats.t.current, len(stats.layer1_servers))]
+    stats.rhoA_samples = [(stats.t.current, 0.0)]
+    stats.rhoB_samples = [(stats.t.current, 0.0)]
+    stats.lambda_times = [(stats.t.current, lambda_scaling(stats.t.current))]
+    stats.system_resp_times = [(stats.t.current, 0.0)]
 
     # primo arrivo esterno (iper-esponenziale + lambda variabile)
     stats.t.arrival = GetHyperArrivalScaling(stats.t.current)
@@ -507,22 +513,14 @@ def scaling_finite_simulation(stop):
 
             lam_now = lambda_scaling(stats.t.current)
 
-            if not hasattr(stats, "lambda_times"):
-                stats.lambda_times = []
             stats.lambda_times.append((stats.t.current, lam_now))
 
-            if not hasattr(stats, "layer0_servers_times"):
-                stats.layer0_servers_times = []
             stats.layer0_servers_times.append((stats.t.current, len(stats.layer0_servers)))
 
-            if not hasattr(stats, "layer1_servers_times"):
-                stats.layer1_servers_times = []
             stats.layer1_servers_times.append((stats.t.current, len(stats.layer1_servers)))
 
-            if not hasattr(stats, "system_resp_times"):
-                stats.system_resp_times = []
             comp_A3 = stats.index_A3
-            Rsys = (stats.area_A.node + stats.area_B.node + stats.area_P.service) / comp_A3 if comp_A3 > 0 else 0.0
+            Rsys = (stats.area_A.node + stats.area_B.node + stats.area_P.node) / comp_A3 if comp_A3 > 0 else 0.0
             stats.system_resp_times.append((stats.t.current, Rsys))
 
             current_checkpoint += 1

@@ -51,6 +51,7 @@ def finite_simulation(stop):
             A1_resp = (stats.area_A1.node / stats.index_A1) if stats.index_A1 > 0 else 0.0
             A2_resp = (stats.area_A2.node / stats.index_A2) if stats.index_A2 > 0 else 0.0
             A3_resp = (stats.area_A3.node / stats.index_A3) if stats.index_A3 > 0 else 0.0
+            system_resp = (stats.area_A.node + stats.area_B.node + stats.area_P.node) / stats.index_A3 if stats.index_A3 > 0 else 0.0
 
             stats.A_wait_times.append((stats.t.current, A_wait))
             stats.B_wait_times.append((stats.t.current, B_wait))
@@ -65,6 +66,7 @@ def finite_simulation(stop):
             stats.A1_resp_times.append((stats.t.current, A1_resp))
             stats.A2_resp_times.append((stats.t.current, A2_resp))
             stats.A3_resp_times.append((stats.t.current, A3_resp))
+            stats.system_resp_times.append((stats.t.current, system_resp))
 
             current_checkpoint += 1
             

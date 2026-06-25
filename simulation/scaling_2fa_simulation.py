@@ -10,12 +10,10 @@ def scaling_2fa_finite_simulation(stop):
     _orig_A = scal.get_service_A
     _orig_P = scal.get_service_P
 
-    scal.get_service_A = scal.get_service_A_2FA
-    scal.get_service_P = scal.get_service_P_2FA
-
-    results, stats = scal.scaling_finite_simulation(stop)
-
-    scal.get_service_A = _orig_A
-    scal.get_service_P = _orig_P
-
-    return results, stats
+    try:
+        scal.get_service_A = scal.get_service_A_2FA
+        scal.get_service_P = scal.get_service_P_2FA
+        return scal.scaling_finite_simulation(stop)
+    finally:
+        scal.get_service_A = _orig_A
+        scal.get_service_P = _orig_P

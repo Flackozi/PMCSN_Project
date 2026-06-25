@@ -4,10 +4,8 @@ from math import log
 from libraries import rvms
 from libraries.rngs import selectStream, random
 import statistics
-import matplotlib.pyplot as plt
 
 arrivalTemp = vs.START
-arrivalTempScaling = vs.START
 arrivalTempRealistic = vs.START
 
 def get_simulation(model):
@@ -35,10 +33,6 @@ def reset_arrival_temp():
     global arrivalTemp
     arrivalTemp = vs.START
     
-def reset_arrival_temp_scaling():
-    global arrivalTempScaling
-    arrivalTempScaling = vs.START
-
 def reset_arrival_temp_realistic():
     global arrivalTempRealistic
     arrivalTempRealistic = vs.START
@@ -104,14 +98,6 @@ def HyperExponential(m):
     else:
         return - (m/0.6) * log(1.0 - random())  # seconda fase con media m/(0.3*2)
 
-def GetHyperArrival():
-    """Generate the next arrival time for the first server with Hyper-Exponential."""
-    global arrivalTemp
-    selectStream(6)
-    arrivalTemp += HyperExponential(1 / vs.LAMBDA)
-    return arrivalTemp
-
-
 def append_stats(replicationStats, results, stats):
     """
     Salva, per una replica, tutti i valori contenuti in `results`
@@ -172,6 +158,7 @@ def append_stats(replicationStats, results, stats):
     replicationStats.A1_resp_interval.append(stats.A1_resp_times)
     replicationStats.A2_resp_interval.append(stats.A2_resp_times)
     replicationStats.A3_resp_interval.append(stats.A3_resp_times)
+    replicationStats.system_resp_interval.append(stats.system_resp_times)
 
 def calculate_confidence_interval(data):
     n = len(data)
@@ -219,22 +206,6 @@ def GetHyperArrivalScaling(current_time: float) -> float:
     return arrivalTempRealistic
 
 
-def GetArrivalScaling(current_time: float) -> float:
-    """
-    Al tempo corrente 'current_time' calcolo lambda_scaling(current_time),
-    poi genero il prossimo inter-arrivo come Exp(mean = 1/lambda).
-    """
-    global arrivalTempScaling
-    selectStream(0)
-
-    lam = lambda_scaling(current_time)
-    inter = Exponential(1.0 / lam)       # Exponential prende la MEDIA
-
-    arrivalTempScaling += inter
-    return arrivalTempScaling
-    
-
-    
 def percentile_nearest_rank(values, p):
     if not values:
         return 0

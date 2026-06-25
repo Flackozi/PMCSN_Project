@@ -44,7 +44,7 @@ PRINT_PLOT_BATCH = 1
 SImax = 8 
 # MIN_SERVERS = 1
 # MAX_SERVERS = 2 #calcolato analiticamente 
-RHO_UP = 0.7 #rho target per scalare up
+RHO_UP = 0.6 #rho target per scalare up
 RHO_DOWN = 0.35 #rho target per scalare down
 RHO_CHECK_INTERVAL = 4000.0 # ogni quanto (secondi) scatta il controllo periodico di rho(B)
 BASE_MU_LAYER1 = 1.25     # 1 / mean service time
@@ -58,7 +58,7 @@ def set_simulation(model, type):
     if model == 1:
         MODEL = BASE
     if type == 1: 
-        SIM_TYPE == FINITE 
+        SIM_TYPE = FINITE
     else: 
         SIM_TYPE = INFINITE
     
