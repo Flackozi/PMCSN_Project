@@ -178,12 +178,11 @@ def start_realistic_2fa_simulation():
 
 
 def start_scaling_simulation():
-    _, scaling_stats = _start_finite_scenario(
+    scaling_replication_stats, _ = _start_finite_scenario(
         "FINITE SCALING REALISTIC SIMULATION",
         scaling_finite_simulation,
         "scaling_model",
         "scaling_model",
-        normal_replications=1,
         plot_population=False,
         plot_scaling=True,
     )
@@ -191,7 +190,7 @@ def start_scaling_simulation():
         _, realistic_stats = realistic_finite_simulation(vs.STOP)
         plot_realistic_vs_scaling_response_time(
             realistic_stats.system_resp_times,
-            scaling_stats.system_resp_times,
+            scaling_replication_stats.system_resp_interval,
             qos=10.0,
         )
 

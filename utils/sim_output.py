@@ -2,6 +2,7 @@ import csv
 import statistics
 import matplotlib.pyplot as plt
 import os
+import utils.variables as vs
 from utils.sim_utils import *
 file_path = "simulation/../output/csv/"
 
@@ -104,12 +105,18 @@ def plot_rho_t(rho_times, sim_type, name, ylabel='Rho'):
 
     x_values = [t for t, _ in rho_times]
     y_values = [rho for _, rho in rho_times]
+    y_max = max(1.0, max(y_values) + 0.05)
 
     plt.figure(figsize=(10, 6))
+    plt.axhline(y=vs.RHO_UP, color='red', linestyle='--', label=f'Rho up {vs.RHO_UP:g}')
+    plt.axhline(y=vs.RHO_DOWN, color='green', linestyle='--', label=f'Rho down {vs.RHO_DOWN:g}')
     plt.step(x_values, y_values, where='post')
+    plt.ylim(0, y_max)
+    plt.yticks([i / 20 for i in range(0, int(20 * y_max) + 1)])
     plt.xlabel('Time')
     plt.ylabel(ylabel)
     plt.grid(True)
+    plt.legend()
 
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, f'{name}.png')
@@ -119,6 +126,26 @@ def plot_rho_t(rho_times, sim_type, name, ylabel='Rho'):
 def plot_realistic_vs_scaling_response_time(realistic_resp_times, scaling_resp_times, qos=10.0,
                                             name="realistic_vs_scaling_response_time"):
     output_dir = "simulation/../output/plot/finite_simulation/realistic_vs_scaling"
+
+    def mean_curve(resp_times):
+        if not resp_times:
+            return []
+        if isinstance(resp_times[0], tuple):
+            return resp_times
+
+        curve = []
+        max_len = max((len(series) for series in resp_times), default=0)
+        for i in range(max_len):
+            points = [series[i] for series in resp_times if i < len(series)]
+            if points:
+                curve.append((
+                    statistics.mean(t for t, _ in points),
+                    statistics.mean(r for _, r in points),
+                ))
+        return curve
+
+    realistic_resp_times = mean_curve(realistic_resp_times)
+    scaling_resp_times = mean_curve(scaling_resp_times)
 
     if not realistic_resp_times or not scaling_resp_times:
         return
@@ -131,7 +158,7 @@ def plot_realistic_vs_scaling_response_time(realistic_resp_times, scaling_resp_t
 
     plt.figure(figsize=(10, 6))
     plt.axhline(y=qos, color='r', linestyle='--', label=f'QoS {qos:g}s')
-    plt.plot(scaling_x, scaling_y, label='Improved model')
+    plt.plot(scaling_x, scaling_y, label='Realistic model with scaling')
     plt.plot(real_x, real_y, label='Realistic base model')
     plt.xlim(0, end_time)
     plt.xlabel('Time')
