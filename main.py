@@ -120,6 +120,15 @@ def _start_finite_scenario(
 
 
 def start_base_simulation():
+    if vs.TRANSIENT_ANALYSIS == 1:
+        _start_finite_scenario(
+            "FINITE BASE TRANSIENT ANALYSIS",
+            finite_simulation,
+            "base_model",
+            "base_model",
+        )
+        return
+
     start_infinite_base_simulation()
 
 
